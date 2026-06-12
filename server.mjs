@@ -1,7 +1,6 @@
 import express from 'express';
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 function loadEnv() {
   const envPath = resolve('.env');
@@ -338,7 +337,7 @@ app.get('*path', (req, res) => res.sendFile(resolve('dist/index.html')));
 
 export { app };
 
-if (fileURLToPath(import.meta.url) === resolve(process.argv[1] || '')) {
+if (resolve(process.argv[1] || '').endsWith('server.mjs')) {
   app.listen(port, '127.0.0.1', () => {
     console.log(`Wealth dashboard API disponibile su http://127.0.0.1:${port}`);
   });
