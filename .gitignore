@@ -1,0 +1,10 @@
+node_modules/
+dist/
+web app cliente/node_modules/
+web app cliente/dist/
+data/
+outputs/
+*.log
+*.err.log
+.env
+.cache/
