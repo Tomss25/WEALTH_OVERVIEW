@@ -3,29 +3,31 @@ import { createRoot } from 'react-dom/client';
 import {
   ArrowDownRight,
   ArrowUpRight,
-  BarChart3,
   Bell,
   BrainCircuit,
+  BriefcaseBusiness,
+  CandlestickChart,
+  ChartNoAxesCombined,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
   CircleDollarSign,
   ExternalLink,
   Gauge,
+  Globe2,
   Landmark,
-  LayoutDashboard,
   Moon,
   MoreHorizontal,
   Newspaper,
   Plus,
   RefreshCw,
   Search,
-  Settings,
+  ShieldCheck,
+  SlidersHorizontal,
   Sparkles,
   Star,
   Sun,
   Trash2,
-  WalletCards,
 } from 'lucide-react';
 import {
   Area,
@@ -264,7 +266,7 @@ function TradingViewTickerTape() {
   return (
     <section className="tickerTape" aria-label="Quotazioni mercati in tempo reale">
       {!ready && <div className="tickerLoading">Caricamento quotazioni...</div>}
-      <tv-ticker-tape symbols="FOREXCOM:SPXUSD,INDEX:FTSEMIB,NASDAQ:NDX,ACTIVTRADES:EURO50,TVC:VIX,TVC:UKOIL,OANDA:EURUSD,OANDA:GBPUSD,OANDA:USDJPY,OANDA:XAUUSD" />
+      <tv-ticker-tape symbols="FOREXCOM:SPXUSD,FOREXCOM:NSXUSD,FOREXCOM:DJI,FX:EURUSD,BITSTAMP:BTCUSD,CMCMARKETS:GOLD,CAPITALCOM:NAS100,FTSE:FTSEMIB" />
     </section>
   );
 }
@@ -685,6 +687,309 @@ function NewsOverview({ theme, setTheme }) {
   );
 }
 
+const formatPortfolioNumber = (value) => Number(value || 0).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+function PortfolioOverview({ theme, setTheme, assets, transactions, addTransaction, removeTransaction, pricesUpdatedAt }) {
+  const [form, setForm] = useState({ type: 'buy', mode: 'quantity', symbol: assets[0]?.symbol || '', quantity: '', amount: '', price: '', fees: '0', date: new Date().toISOString().slice(0, 10) });
+  const selectedAsset = assets.find((item) => item.symbol === form.symbol);
+  const currentAssetPrice = parseItalianNumber(selectedAsset?.price || 0);
+  const calculatedQuantity = form.mode === 'amount' && Number(form.price) > 0 ? Number(form.amount) / Number(form.price) : Number(form.quantity);
+  const calculatedAmount = form.mode === 'quantity' ? Number(form.quantity) * Number(form.price) : Number(form.amount);
+
+  const positions = useMemo(() => {
+    const bySymbol = new Map();
+    [...transactions].sort((a, b) => a.date.localeCompare(b.date)).forEach((transaction) => {
+      const position = bySymbol.get(transaction.symbol) || { symbol: transaction.symbol, quantity: 0, cost: 0, realized: 0 };
+      const quantity = Number(transaction.quantity);
+      const price = Number(transaction.price);
+      const fees = Number(transaction.fees || 0);
+      if (transaction.type === 'buy') {
+        position.quantity += quantity;
+        position.cost += quantity * price + fees;
+      } else if (position.quantity > 0) {
+        const soldQuantity = Math.min(quantity, position.quantity);
+        const averageCost = position.cost / position.quantity;
+        position.realized += soldQuantity * price - fees - soldQuantity * averageCost;
+        position.quantity -= soldQuantity;
+        position.cost -= soldQuantity * averageCost;
+      }
+      bySymbol.set(transaction.symbol, position);
+    });
+
+    return [...bySymbol.values()].filter((position) => position.quantity > 0.000001).map((position) => {
+      const asset = assets.find((item) => item.symbol === position.symbol);
+      const currentPrice = parseItalianNumber(asset?.price || 0);
+      const value = position.quantity * currentPrice;
+      const unrealized = value - position.cost;
+      return { ...position, asset, currentPrice, value, unrealized, returnPct: position.cost ? (unrealized / position.cost) * 100 : 0 };
+    }).sort((a, b) => b.value - a.value);
+  }, [assets, transactions]);
+
+  const totalValue = positions.reduce((sum, position) => sum + position.value, 0);
+  const totalCost = positions.reduce((sum, position) => sum + position.cost, 0);
+  const totalUnrealized = totalValue - totalCost;
+  const totalReturn = totalCost ? (totalUnrealized / totalCost) * 100 : 0;
+  const realized = useMemo(() => {
+    const holdings = new Map();
+    return [...transactions].sort((a, b) => a.date.localeCompare(b.date)).reduce((total, transaction) => {
+      const holding = holdings.get(transaction.symbol) || { quantity: 0, cost: 0 };
+      const quantity = Number(transaction.quantity);
+      const price = Number(transaction.price);
+      const fees = Number(transaction.fees || 0);
+      if (transaction.type === 'buy') {
+        holding.quantity += quantity;
+        holding.cost += quantity * price + fees;
+        holdings.set(transaction.symbol, holding);
+        return total;
+      }
+      if (holding.quantity <= 0) return total;
+      const soldQuantity = Math.min(quantity, holding.quantity);
+      const averageCost = holding.cost / holding.quantity;
+      holding.quantity -= soldQuantity;
+      holding.cost -= soldQuantity * averageCost;
+      holdings.set(transaction.symbol, holding);
+      return total + soldQuantity * price - fees - soldQuantity * averageCost;
+    }, 0);
+  }, [transactions]);
+
+  function submitTransaction(event) {
+    event.preventDefault();
+    if (!form.symbol || calculatedQuantity <= 0 || Number(form.price) <= 0) return;
+    addTransaction({ ...form, quantity: calculatedQuantity, amount: calculatedAmount });
+    setForm((current) => ({ ...current, quantity: '', amount: '', price: '', fees: '0' }));
+  }
+
+  return (
+    <>
+      <header>
+        <div><p className="eyebrow">Patrimonio e performance</p><h1>Portafoglio</h1><p className="subtitle">Posizioni e rendimenti calcolati localmente, senza chiamate API aggiuntive.</p></div>
+        <HeaderActions theme={theme} setTheme={setTheme} />
+      </header>
+
+      <div className="demoNotice"><ShieldCheck size={15} /><span>Operazioni salvate esclusivamente in questo browser</span><b>{pricesUpdatedAt ? `Prezzi condivisi aggiornati alle ${formatUpdateTime(pricesUpdatedAt)}` : 'Nessuna API dedicata'}</b></div>
+
+      <section className="portfolioKpis">
+        <article className="card portfolioKpi"><span>Valore indicativo</span><strong>{formatPortfolioNumber(totalValue)}</strong><small>Somma senza conversione valutaria</small></article>
+        <article className="card portfolioKpi"><span>Capitale investito</span><strong>{formatPortfolioNumber(totalCost)}</strong><small>Costo residuo delle posizioni</small></article>
+        <article className={`card portfolioKpi ${totalUnrealized >= 0 ? 'positive' : 'negative'}`}><span>Risultato non realizzato</span><strong>{totalUnrealized >= 0 ? '+' : ''}{formatPortfolioNumber(totalUnrealized)}</strong><Change value={totalReturn} /></article>
+        <article className={`card portfolioKpi ${realized >= 0 ? 'positive' : 'negative'}`}><span>Risultato realizzato</span><strong>{realized >= 0 ? '+' : ''}{formatPortfolioNumber(realized)}</strong><small>Vendite registrate</small></article>
+      </section>
+
+      <section className="portfolioWorkspace">
+        <form className="card transactionForm" onSubmit={submitTransaction}>
+          <div><span className="overline">NUOVA OPERAZIONE</span><h2>Registra movimento</h2><p>Il calcolo usa i prezzi già caricati nella dashboard.</p></div>
+          <label><span>Tipo</span><select value={form.type} onChange={(event) => setForm({ ...form, type: event.target.value })}><option value="buy">Acquisto</option><option value="sell">Vendita</option></select></label>
+          <label><span>Asset</span><select value={form.symbol} onChange={(event) => setForm({ ...form, symbol: event.target.value, price: '', quantity: '', amount: '' })}>{assets.map((item) => <option value={item.symbol} key={item.symbol}>{item.symbol} · {item.name}</option>)}</select></label>
+          <div className="transactionMode" role="group" aria-label="Modalità inserimento">
+            <button type="button" className={form.mode === 'quantity' ? 'active' : ''} onClick={() => setForm({ ...form, mode: 'quantity', amount: '' })}>Per quantità</button>
+            <button type="button" className={form.mode === 'amount' ? 'active' : ''} onClick={() => setForm({ ...form, mode: 'amount', quantity: '' })}>Per importo</button>
+          </div>
+          <div className="transactionFormRow">
+            {form.mode === 'quantity'
+              ? <label><span>Quantità</span><input type="number" min="0" step="any" value={form.quantity} onChange={(event) => setForm({ ...form, quantity: event.target.value })} required /></label>
+              : <label><span>Importo</span><input type="number" min="0" step="any" value={form.amount} onChange={(event) => setForm({ ...form, amount: event.target.value })} required /></label>}
+            <label><span>Prezzo unitario</span><div className="priceInputGroup"><input type="number" min="0" step="any" value={form.price} onChange={(event) => setForm({ ...form, price: event.target.value })} placeholder={selectedAsset?.price} required /><button type="button" disabled={!currentAssetPrice} onClick={() => setForm({ ...form, price: String(currentAssetPrice) })}>Prezzo attuale</button></div></label>
+          </div>
+          <div className="transactionFormRow">
+            <label><span>Commissioni</span><input type="number" min="0" step="any" value={form.fees} onChange={(event) => setForm({ ...form, fees: event.target.value })} /></label>
+            <label><span>Data</span><input type="date" value={form.date} onChange={(event) => setForm({ ...form, date: event.target.value })} required /></label>
+          </div>
+          {Number(form.price) > 0 && ((form.mode === 'quantity' && Number(form.quantity) > 0) || (form.mode === 'amount' && Number(form.amount) > 0)) && <div className="transactionCalculation"><span>Quantità calcolata <strong>{formatPortfolioNumber(calculatedQuantity)}</strong></span><span>Controvalore <strong>{formatPortfolioNumber(calculatedAmount)}</strong></span></div>}
+          <button className="portfolioPrimaryButton" type="submit"><Plus size={16} />Aggiungi operazione</button>
+        </form>
+
+        <article className="card allocationCard">
+          <div><span className="overline">ALLOCAZIONE</span><h2>Peso delle posizioni</h2><p>Distribuzione basata sul valore corrente.</p></div>
+          <div className="allocationList">
+            {positions.map((position) => <div className="allocationItem" key={position.symbol}><div><strong>{position.symbol}</strong><span>{totalValue ? formatPortfolioNumber((position.value / totalValue) * 100) : '0,00'}%</span></div><i><b style={{ width: `${totalValue ? (position.value / totalValue) * 100 : 0}%` }} /></i></div>)}
+            {!positions.length && <div className="portfolioEmpty">Registra un acquisto per visualizzare l’allocazione.</div>}
+          </div>
+        </article>
+      </section>
+
+      <section className="sectionHeading"><div><h2>Posizioni aperte</h2><p>Valore corrente, costo medio e rendimento.</p></div><span className="updated">{positions.length} posizioni</span></section>
+      <section className="card portfolioTableCard">
+        <div className="portfolioTable">
+          <div className="portfolioRow portfolioHead"><span>Asset</span><span>Quantità</span><span>Prezzo medio</span><span>Prezzo corrente</span><span>Valore</span><span>Risultato</span></div>
+          {positions.map((position) => <div className="portfolioRow" key={position.symbol}><span><strong>{position.asset?.name || position.symbol}</strong><small>{position.symbol} · {position.asset?.currency || 'Valuta n/d'}</small></span><span>{formatPortfolioNumber(position.quantity)}</span><span>{formatPortfolioNumber(position.cost / position.quantity)}</span><span>{formatPortfolioNumber(position.currentPrice)}</span><strong>{formatPortfolioNumber(position.value)}</strong><Change value={position.returnPct} /></div>)}
+          {!positions.length && <div className="portfolioEmpty">Nessuna posizione aperta.</div>}
+        </div>
+      </section>
+
+      <section className="sectionHeading"><div><h2>Ultime operazioni</h2><p>Storico persistente nel browser.</p></div><span className="updated">{transactions.length} movimenti</span></section>
+      <section className="transactionHistory">
+        {[...transactions].reverse().map((transaction) => <article className="card transactionItem" key={transaction.id}><span className={`transactionType ${transaction.type}`}>{transaction.type === 'buy' ? 'Acquisto' : 'Vendita'}</span><div><strong>{transaction.symbol}</strong><small>{transaction.date}</small></div><span>{formatPortfolioNumber(transaction.quantity)} × {formatPortfolioNumber(transaction.price)}</span><button type="button" onClick={() => removeTransaction(transaction.id)} aria-label={`Elimina operazione ${transaction.symbol}`}><Trash2 size={15} /></button></article>)}
+        {!transactions.length && <div className="card portfolioEmpty">Nessuna operazione registrata.</div>}
+      </section>
+    </>
+  );
+}
+
+function historicalMetrics(points) {
+  const closes = points.map((point) => point.close).filter(Number.isFinite);
+  const returns = closes.slice(1).map((close, index) => close / closes[index] - 1);
+  const mean = returns.reduce((sum, value) => sum + value, 0) / Math.max(returns.length, 1);
+  const variance = returns.reduce((sum, value) => sum + (value - mean) ** 2, 0) / Math.max(returns.length - 1, 1);
+  let peak = closes[0] || 0;
+  let maxDrawdown = 0;
+  closes.forEach((close) => {
+    peak = Math.max(peak, close);
+    if (peak) maxDrawdown = Math.min(maxDrawdown, close / peak - 1);
+  });
+  return {
+    price: closes.at(-1) || 0,
+    returnPct: closes.length > 1 ? (closes.at(-1) / closes[0] - 1) * 100 : 0,
+    volatility: Math.sqrt(variance) * Math.sqrt(252) * 100,
+    maxDrawdown: maxDrawdown * 100,
+  };
+}
+
+function correlation(seriesA, seriesB) {
+  const aByDate = new Map(seriesA.map((point) => [point.date, point.close]));
+  const paired = seriesB.filter((point) => aByDate.has(point.date)).map((point) => [aByDate.get(point.date), point.close]);
+  if (paired.length < 3) return 0;
+  const returnsA = paired.slice(1).map((pair, index) => pair[0] / paired[index][0] - 1);
+  const returnsB = paired.slice(1).map((pair, index) => pair[1] / paired[index][1] - 1);
+  const meanA = returnsA.reduce((sum, value) => sum + value, 0) / returnsA.length;
+  const meanB = returnsB.reduce((sum, value) => sum + value, 0) / returnsB.length;
+  const covariance = returnsA.reduce((sum, value, index) => sum + (value - meanA) * (returnsB[index] - meanB), 0);
+  const varianceA = returnsA.reduce((sum, value) => sum + (value - meanA) ** 2, 0);
+  const varianceB = returnsB.reduce((sum, value) => sum + (value - meanB) ** 2, 0);
+  return varianceA && varianceB ? covariance / Math.sqrt(varianceA * varianceB) : 0;
+}
+
+function buildBasketPoints(history, weights) {
+  if (!history.length) return [];
+  const maps = history.map((item) => new Map(item.points.map((point) => [point.date, point.close])));
+  const commonPoints = history[0].points.filter((point) => maps.every((map) => map.has(point.date)));
+  const bases = maps.map((map) => map.get(commonPoints[0]?.date));
+  return commonPoints.map((point) => ({
+    date: point.date,
+    close: history.reduce((total, item, index) => total + ((Number(weights[item.symbol]) || 0) / 100) * (maps[index].get(point.date) / bases[index]) * 100, 0),
+  })).filter((point) => Number.isFinite(point.close));
+}
+
+function AnalysisOverview({ theme, setTheme, assets, favorites }) {
+  const initialSymbols = assets.filter((item) => favorites.has(item.symbol)).slice(0, 4).map((item) => item.symbol);
+  const [selected, setSelected] = useState(initialSymbols);
+  const [years, setYears] = useState(3);
+  const [history, setHistory] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [updatedAt, setUpdatedAt] = useState(null);
+  const [historyYears, setHistoryYears] = useState(null);
+  const [basketOpen, setBasketOpen] = useState(false);
+  const [basketActive, setBasketActive] = useState(false);
+  const [weights, setWeights] = useState({});
+
+  const basketSeries = history.filter((item) => selected.includes(item.symbol));
+  const basketPoints = useMemo(() => basketActive ? buildBasketPoints(basketSeries, weights) : [], [basketActive, basketSeries, weights]);
+  const metrics = [...history.map((item) => ({ symbol: item.symbol, ...historicalMetrics(item.points) })), ...(basketPoints.length ? [{ symbol: 'BASKET', ...historicalMetrics(basketPoints) }] : [])];
+  const basketWeightTotal = selected.reduce((total, symbol) => total + (Number(weights[symbol]) || 0), 0);
+  const normalizedData = useMemo(() => {
+    const rows = new Map();
+    history.forEach((item) => {
+      const base = item.points[0]?.close;
+      item.points.forEach((point) => {
+        const row = rows.get(point.date) || { date: point.date };
+        row[item.symbol] = base ? (point.close / base) * 100 : null;
+        rows.set(point.date, row);
+      });
+    });
+    basketPoints.forEach((point) => {
+      const row = rows.get(point.date) || { date: point.date };
+      row.BASKET = point.close;
+      rows.set(point.date, row);
+    });
+    return [...rows.values()].sort((a, b) => a.date.localeCompare(b.date));
+  }, [basketPoints, history]);
+
+  function toggleAnalysisSymbol(symbol) {
+    setSelected((current) => {
+      const next = current.includes(symbol) ? current.filter((item) => item !== symbol) : current.length < 8 ? [...current, symbol] : current;
+      setBasketActive(false);
+      setWeights((currentWeights) => {
+        const equalWeight = next.length ? 100 / next.length : 0;
+        return Object.fromEntries(next.map((item) => [item, currentWeights[item] ?? equalWeight]));
+      });
+      return next;
+    });
+  }
+
+  async function runAnalysis() {
+    if (!selected.length) return;
+    setLoading(true);
+    setError('');
+    try {
+      const response = await fetch(`/api/history?symbols=${encodeURIComponent(selected.join(','))}&years=${years}`);
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.details || data.error);
+      setHistory(data.series || []);
+      setHistoryYears(years);
+      setBasketActive(false);
+      setUpdatedAt(data.updatedAt);
+      if ((data.series || []).length < selected.length) setError('Alcune serie non sono disponibili su Yahoo Finance.');
+    } catch (requestError) {
+      setError(requestError.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function openBasket() {
+    const equalWeight = selected.length ? 100 / selected.length : 0;
+    setWeights((current) => Object.fromEntries(selected.map((symbol) => [symbol, current[symbol] ?? equalWeight])));
+    setBasketOpen(true);
+    setBasketActive(false);
+  }
+
+  async function runBasketAnalysis() {
+    if (Math.abs(basketWeightTotal - 100) > 0.01) {
+      setError('La somma dei pesi del basket deve essere pari al 100%.');
+      return;
+    }
+    setError('');
+    const availableSymbols = new Set(history.map((item) => item.symbol));
+    if (historyYears === years && selected.every((symbol) => availableSymbols.has(symbol))) {
+      setBasketActive(true);
+      return;
+    }
+    await runAnalysis();
+    setBasketActive(true);
+  }
+
+  return (
+    <>
+      <header><div><p className="eyebrow">Rischio e performance</p><h1>Analisi</h1><p className="subtitle">Serie storiche Yahoo scaricate solo su richiesta e conservate in cache per 6 ore.</p></div><HeaderActions theme={theme} setTheme={setTheme} /></header>
+      <div className="demoNotice"><ShieldCheck size={15} /><span>Nessuna chiamata API al caricamento della pagina</span><b>{updatedAt ? `Analisi aggiornata alle ${formatUpdateTime(updatedAt)}` : 'Premi Esegui analisi'}</b></div>
+
+      <section className="card analysisControls">
+        <div><span className="overline">CONFIGURAZIONE</span><h2>Seleziona gli strumenti</h2><p>Massimo 8 asset per analisi. Yahoo Finance è l’unica fonte utilizzata.</p></div>
+        <div className="analysisAssetPicker">{assets.map((item) => <button type="button" className={selected.includes(item.symbol) ? 'active' : ''} onClick={() => toggleAnalysisSymbol(item.symbol)} key={item.symbol}><span>{item.symbol}</span><small>{item.name}</small></button>)}</div>
+        <div className="analysisRunBar"><label><span>Orizzonte</span><select value={years} onChange={(event) => { setYears(Number(event.target.value)); setBasketActive(false); }}><option value={1}>1 anno</option><option value={3}>3 anni</option><option value={5}>5 anni</option><option value={10}>10 anni</option></select></label><span>{selected.length}/8 strumenti</span><div className="analysisActions"><button className="basketButton" type="button" onClick={openBasket} disabled={selected.length < 2}>Crea basket</button><button type="button" onClick={runAnalysis} disabled={loading || !selected.length}><ChartNoAxesCombined size={16} />{loading ? 'Analisi in corso...' : 'Esegui analisi'}</button></div></div>
+        {error && <div className="refreshError">{error}</div>}
+      </section>
+
+      {basketOpen && <section className="card basketBuilder">
+        <div><span className="overline">BASKET PERSONALIZZATO</span><h2>Attribuisci i pesi</h2><p>La performance utilizza pesi iniziali fissi e le serie storiche già scaricate.</p></div>
+        <div className="basketWeights">{selected.map((symbol) => <label key={symbol}><span><strong>{symbol}</strong><small>{assets.find((item) => item.symbol === symbol)?.name}</small></span><div><input type="number" min="0" max="100" step="0.1" value={weights[symbol] ?? ''} onChange={(event) => { setWeights({ ...weights, [symbol]: event.target.value }); setBasketActive(false); }} /><b>%</b></div></label>)}</div>
+        <div className="basketFooter"><span className={Math.abs(basketWeightTotal - 100) <= .01 ? 'valid' : 'invalid'}>Totale pesi: <strong>{formatPortfolioNumber(basketWeightTotal)}%</strong></span><button type="button" onClick={runBasketAnalysis} disabled={loading || Math.abs(basketWeightTotal - 100) > .01}><ChartNoAxesCombined size={16} />Analizza basket</button></div>
+      </section>}
+
+      {!!history.length && <>
+        <section className="sectionHeading"><div><h2>Performance storica</h2><p>Andamento normalizzato a base 100.</p></div><span className="updated">{years} {years === 1 ? 'anno' : 'anni'}</span></section>
+        <article className="card analysisChart"><ResponsiveContainer width="100%" height="100%"><AreaChart data={normalizedData}><CartesianGrid strokeDasharray="3 3" opacity={0.15} /><XAxis dataKey="date" tick={{ fontSize: 10 }} minTickGap={45} /><YAxis tick={{ fontSize: 10 }} /><Tooltip />{history.map((item, index) => <Area type="monotone" dataKey={item.symbol} stroke={['#5a8cff','#43d19e','#f0a764','#b18bff','#ff7185','#64c7ea','#f1cf63','#7f93b5'][index]} fill="transparent" strokeWidth={2} connectNulls key={item.symbol} />)}{basketPoints.length && <Area type="monotone" dataKey="BASKET" stroke="#ffd166" fill="transparent" strokeWidth={3.5} connectNulls />}</AreaChart></ResponsiveContainer></article>
+
+        <section className="sectionHeading"><div><h2>Metriche</h2><p>Rendimento totale, volatilità annualizzata e drawdown.</p></div></section>
+        <section className="analysisMetricGrid">{metrics.map((item) => <article className="card analysisMetric" key={item.symbol}><span>{item.symbol}</span><strong>{formatPortfolioNumber(item.price)}</strong><div><span>Rendimento <Change value={item.returnPct} /></span><span>Volatilità <b>{formatPortfolioNumber(item.volatility)}%</b></span><span>Max drawdown <b className="negativeText">{formatPortfolioNumber(item.maxDrawdown)}%</b></span></div></article>)}</section>
+
+        {history.length > 1 && <><section className="sectionHeading"><div><h2>Matrice di correlazione</h2><p>Correlazione dei rendimenti giornalieri.</p></div></section><section className="card correlationMatrix" style={{ '--correlation-columns': history.length + 1 }}><span />{history.map((item) => <strong key={`h-${item.symbol}`}>{item.symbol}</strong>)}{history.flatMap((row) => [<strong key={`r-${row.symbol}`}>{row.symbol}</strong>, ...history.map((column) => { const value = correlation(row.points, column.points); return <span className={value >= .5 ? 'high' : value <= 0 ? 'low' : 'medium'} key={`${row.symbol}-${column.symbol}`}>{value.toFixed(2)}</span>; })])}</section></>}
+      </>}
+      {!history.length && !loading && <div className="card analysisEmpty"><ChartNoAxesCombined size={28} /><strong>Configura e avvia la prima analisi</strong><span>Le serie storiche verranno richieste solo dopo il clic.</span></div>}
+    </>
+  );
+}
+
 function assetGroupFromQuoteType(quoteType) {
   if (quoteType === 'ETF' || quoteType === 'MUTUALFUND') return 'ETF e fondi';
   if (quoteType === 'INDEX') return 'Indici';
@@ -712,6 +1017,15 @@ function loadFavorites() {
   }
 }
 
+function loadPortfolioTransactions() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('wealth-portfolio-transactions') || '[]');
+    return Array.isArray(saved) ? saved : [];
+  } catch {
+    return [];
+  }
+}
+
 function App() {
   const [theme, setTheme] = useState('light');
   const [page, setPage] = useState('markets');
@@ -723,6 +1037,7 @@ function App() {
     ...loadCustomAssets().map((item) => item.symbol),
   ]));
   const [assets, setAssets] = useState(() => [...markets, ...loadCustomAssets()]);
+  const [transactions, setTransactions] = useState(loadPortfolioTransactions);
   const [pricesUpdatedAt, setPricesUpdatedAt] = useState(null);
 
   useEffect(() => {
@@ -787,6 +1102,7 @@ function App() {
     const matchesQuery = `${item.symbol} ${item.name}`.toLowerCase().includes(query.toLowerCase());
     return favorites.has(item.symbol) && matchesFilter && matchesQuery;
   }), [assets, favorites, filter, query]);
+  const eurUsd = assets.find((item) => item.symbol === 'EUR/USD') || markets.find((item) => item.symbol === 'EUR/USD');
 
   function toggleFavorite(symbol) {
     setFavorites((current) => {
@@ -839,6 +1155,22 @@ function App() {
     });
   }
 
+  function addTransaction(transaction) {
+    setTransactions((current) => {
+      const next = [...current, { ...transaction, id: crypto.randomUUID(), quantity: Number(transaction.quantity), price: Number(transaction.price), fees: Number(transaction.fees || 0) }];
+      localStorage.setItem('wealth-portfolio-transactions', JSON.stringify(next));
+      return next;
+    });
+  }
+
+  function removeTransaction(id) {
+    setTransactions((current) => {
+      const next = current.filter((transaction) => transaction.id !== id);
+      localStorage.setItem('wealth-portfolio-transactions', JSON.stringify(next));
+      return next;
+    });
+  }
+
   return (
     <div className={`app ${sidebarOpen ? '' : 'sidebarClosed'}`} data-theme={theme}>
       <aside className="sidebar">
@@ -847,15 +1179,15 @@ function App() {
           {sidebarOpen ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
         </button>
         <nav>
-          <button className={`navButton ${page === 'markets' ? 'active' : ''}`} onClick={() => setPage('markets')}><LayoutDashboard size={19} /><span>Overview</span></button>
-          <button className={`navButton ${page === 'macro' ? 'active' : ''}`} onClick={() => setPage('macro')}><BrainCircuit size={19} /><span>Macro Overview</span></button>
-          <button className={`navButton ${page === 'watchlist' ? 'active' : ''}`} onClick={() => setPage('watchlist')}><Star size={19} /><span>Mercati</span></button>
-          <button className={`navButton ${page === 'news' ? 'active' : ''}`} onClick={() => setPage('news')}><Newspaper size={19} /><span>News</span></button>
-          <button className="navButton"><WalletCards size={19} /><span>Portafoglio</span></button>
-          <button className="navButton"><BarChart3 size={19} /><span>Analisi</span></button>
+          <button className={`navButton navOverview ${page === 'markets' ? 'active' : ''}`} onClick={() => setPage('markets')}><i className="navIcon"><Gauge size={17} /></i><span>Overview</span></button>
+          <button className={`navButton navMacro ${page === 'macro' ? 'active' : ''}`} onClick={() => setPage('macro')}><i className="navIcon"><Globe2 size={17} /></i><span>Macro Overview</span></button>
+          <button className={`navButton navMarkets ${page === 'watchlist' ? 'active' : ''}`} onClick={() => setPage('watchlist')}><i className="navIcon"><CandlestickChart size={17} /></i><span>Mercati</span></button>
+          <button className={`navButton navNews ${page === 'news' ? 'active' : ''}`} onClick={() => setPage('news')}><i className="navIcon"><Newspaper size={17} /></i><span>News</span></button>
+          <button className={`navButton navPortfolio ${page === 'portfolio' ? 'active' : ''}`} onClick={() => setPage('portfolio')}><i className="navIcon"><BriefcaseBusiness size={17} /></i><span>Portafoglio</span></button>
+          <button className={`navButton navAnalysis ${page === 'analysis' ? 'active' : ''}`} onClick={() => setPage('analysis')}><i className="navIcon"><ChartNoAxesCombined size={17} /></i><span>Analisi</span></button>
         </nav>
         <div className="sidebarBottom">
-          <button className="navButton"><Settings size={19} /><span>Impostazioni</span></button>
+          <button className="navButton navSettings"><i className="navIcon"><SlidersHorizontal size={17} /></i><span>Impostazioni</span></button>
         </div>
       </aside>
 
@@ -865,6 +1197,10 @@ function App() {
           <WatchlistOverview theme={theme} setTheme={setTheme} favorites={favorites} toggleFavorite={toggleFavorite} assets={assets} pricesUpdatedAt={pricesUpdatedAt} addAsset={addAsset} removeAsset={removeAsset} />
         ) : page === 'news' ? (
           <NewsOverview theme={theme} setTheme={setTheme} />
+        ) : page === 'portfolio' ? (
+          <PortfolioOverview theme={theme} setTheme={setTheme} assets={assets} transactions={transactions} addTransaction={addTransaction} removeTransaction={removeTransaction} pricesUpdatedAt={pricesUpdatedAt} />
+        ) : page === 'analysis' ? (
+          <AnalysisOverview theme={theme} setTheme={setTheme} assets={assets} favorites={favorites} />
         ) : (
         <>
         <header>
@@ -883,7 +1219,7 @@ function App() {
 
           <div className="statsColumn">
             <article className="card statCard"><span className="statIcon blue"><Landmark size={19} /></span><div><span>Mercati globali</span><strong>Positivi</strong><small>7 indici su 10 in rialzo</small></div><Change value={0.34} /></article>
-            <article className="card statCard"><span className="statIcon green"><CircleDollarSign size={19} /></span><div><span>EUR / USD</span><strong>1,0842</strong><small>Aggiornato ora</small></div><Change value={-0.12} /></article>
+            <article className="card statCard"><span className="statIcon green"><CircleDollarSign size={19} /></span><div><span>EUR / USD</span><strong>{eurUsd.price}</strong><small>{pricesUpdatedAt ? `Aggiornato alle ${formatUpdateTime(pricesUpdatedAt)}` : 'Valore iniziale'}</small></div><Change value={eurUsd.daily} /></article>
             <article className="card statCard sentiment"><div className="sentimentTop"><span>Sentiment mercato</span><strong>Risk-on</strong></div><div className="sentimentBar"><i /></div><div className="sentimentLabels"><span>Prudenza</span><span>Ottimismo</span></div></article>
           </div>
         </section>

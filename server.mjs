@@ -17,6 +17,7 @@ loadEnv();
 const app = express();
 const port = Number(process.env.PORT || 3001);
 const PRICE_CACHE_MS = 15 * 60 * 1000;
+const HISTORY_CACHE_MS = 6 * 60 * 60 * 1000;
 
 const instruments = [
   { symbol: 'SPX', twelve: 'SPX', yahoo: '^GSPC' },
@@ -51,6 +52,9 @@ const instruments = [
 ];
 
 let priceCache = { updatedAt: null, expiresAt: 0, assets: [] };
+const customQuoteCache = new Map();
+const assetSearchCache = new Map();
+const historyCache = new Map();
 let newsCache = { updatedAt: null, articles: [] };
 
 const round = (value) => Math.round(value * 100) / 100;
@@ -142,6 +146,26 @@ async function fetchYahoo(instrument) {
   return { ...current, price: current.price * (instrument.scale || 1), currency: chart?.meta?.currency || '', source: 'Yahoo Finance' };
 }
 
+async function fetchYahooHistory(symbol, years) {
+  const instrument = instruments.find((item) => item.symbol === symbol);
+  const yahooSymbol = instrument?.yahoo || symbol;
+  const end = Math.floor(Date.now() / 1000);
+  const start = end - years * 365 * 24 * 60 * 60;
+  const params = new URLSearchParams({ period1: String(start), period2: String(end), interval: '1d', events: 'history' });
+  const response = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(yahooSymbol)}?${params}`, {
+    headers: { 'User-Agent': 'Mozilla/5.0' },
+  });
+  if (!response.ok) return null;
+  const chart = (await response.json()).chart?.result?.[0];
+  const timestamps = chart?.timestamp || [];
+  const closes = chart?.indicators?.adjclose?.[0]?.adjclose || chart?.indicators?.quote?.[0]?.close || [];
+  const points = timestamps.map((timestamp, index) => ({
+    date: new Date(timestamp * 1000).toISOString().slice(0, 10),
+    close: closes[index],
+  })).filter((point) => Number.isFinite(point.close));
+  return points.length > 1 ? { symbol, yahooSymbol, points } : null;
+}
+
 async function fetchTwelve(instrument) {
   if (!instrument.twelve || !process.env.TWELVE_DATA_API_KEY) return null;
   const params = new URLSearchParams({
@@ -162,12 +186,11 @@ async function fetchPrices() {
   const assets = [];
   let twelveCalls = 0;
   for (const instrument of instruments) {
-    let result = null;
-    if (instrument.twelve && twelveCalls < 8) {
+    let result = await fetchYahoo(instrument).catch(() => null);
+    if (!result && instrument.twelve && twelveCalls < 8) {
       twelveCalls += 1;
       result = await fetchTwelve(instrument).catch(() => null);
     }
-    if (!result) result = await fetchYahoo(instrument).catch(() => null);
     if (result) assets.push({ symbol: instrument.symbol, ...result });
   }
   return assets;
@@ -188,13 +211,16 @@ app.get('/api/assets/search', async (req, res) => {
   const query = String(req.query.q || '').trim();
   if (query.length < 2) return res.json({ results: [] });
   try {
+    const cacheKey = query.toLowerCase();
+    const cached = assetSearchCache.get(cacheKey);
+    if (cached?.expiresAt > Date.now()) return res.json(cached.value);
     const params = new URLSearchParams({ q: query, quotesCount: '8', newsCount: '0' });
     const response = await fetch(`https://query1.finance.yahoo.com/v1/finance/search?${params}`, {
       headers: { 'User-Agent': 'Mozilla/5.0' },
     });
     const json = await response.json();
     if (!response.ok) throw new Error('Ricerca Yahoo Finance non disponibile');
-    const results = (json.quotes || [])
+    let results = (json.quotes || [])
       .filter((item) => item.symbol && item.quoteType !== 'OPTION')
       .map((item) => ({
         symbol: item.symbol,
@@ -202,7 +228,24 @@ app.get('/api/assets/search', async (req, res) => {
         quoteType: item.quoteType,
         exchange: item.exchDisp || item.exchange || '',
       }));
-    res.json({ results });
+
+    if (!results.length && process.env.TWELVE_DATA_API_KEY) {
+      const twelveParams = new URLSearchParams({ symbol: query, apikey: process.env.TWELVE_DATA_API_KEY });
+      const twelveResponse = await fetch(`https://api.twelvedata.com/symbol_search?${twelveParams}`);
+      const twelveJson = await twelveResponse.json();
+      if (twelveResponse.ok && Array.isArray(twelveJson.data)) {
+        results = twelveJson.data.slice(0, 8).map((item) => ({
+          symbol: item.symbol,
+          name: item.instrument_name || item.symbol,
+          quoteType: item.instrument_type || 'EQUITY',
+          exchange: item.exchange || item.country || '',
+        }));
+      }
+    }
+
+    const value = { results };
+    assetSearchCache.set(cacheKey, { expiresAt: Date.now() + PRICE_CACHE_MS, value });
+    res.json(value);
   } catch (error) {
     res.status(502).json({ error: 'Impossibile cercare gli asset', details: error.message, results: [] });
   }
@@ -212,11 +255,37 @@ app.get('/api/assets/quote', async (req, res) => {
   const symbol = String(req.query.symbol || '').trim();
   if (!symbol) return res.status(400).json({ error: 'Simbolo mancante' });
   try {
-    const result = await fetchYahoo({ yahoo: symbol });
+    const cached = customQuoteCache.get(symbol);
+    if (cached?.expiresAt > Date.now()) return res.json(cached.value);
+    let result = await fetchYahoo({ yahoo: symbol }).catch(() => null);
+    if (!result && process.env.TWELVE_DATA_API_KEY) {
+      result = await fetchTwelve({ twelve: symbol }).catch(() => null);
+    }
     if (!result) throw new Error('Quotazione non disponibile');
-    res.json({ symbol, ...result });
+    const value = { symbol, ...result };
+    customQuoteCache.set(symbol, { expiresAt: Date.now() + PRICE_CACHE_MS, value });
+    res.json(value);
   } catch (error) {
     res.status(502).json({ error: 'Impossibile recuperare la quotazione', details: error.message });
+  }
+});
+
+app.get('/api/history', async (req, res) => {
+  const symbols = [...new Set(String(req.query.symbols || '').split(',').map((symbol) => symbol.trim()).filter(Boolean))].slice(0, 8);
+  const years = Math.min(10, Math.max(1, Number(req.query.years) || 3));
+  if (!symbols.length) return res.json({ updatedAt: new Date().toISOString(), years, series: [] });
+  try {
+    const series = (await Promise.all(symbols.map(async (symbol) => {
+      const cacheKey = `${symbol}:${years}`;
+      const cached = historyCache.get(cacheKey);
+      if (cached?.expiresAt > Date.now()) return cached.value;
+      const value = await fetchYahooHistory(symbol, years);
+      if (value) historyCache.set(cacheKey, { expiresAt: Date.now() + HISTORY_CACHE_MS, value });
+      return value;
+    }))).filter(Boolean);
+    res.json({ updatedAt: new Date().toISOString(), years, series });
+  } catch (error) {
+    res.status(502).json({ error: 'Impossibile recuperare le serie storiche', details: error.message, series: [] });
   }
 });
 
