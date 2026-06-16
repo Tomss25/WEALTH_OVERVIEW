@@ -126,6 +126,19 @@ const macroRegions = {
   },
 };
 
+const italyInflationFallback = {
+  items: [
+    { label: 'Inflazione corrente', value: null, note: 'Caricamento fonte live', source: 'ISTAT', url: 'https://www.istat.it/en/tag/inflation/', available: false },
+    { label: 'Inflazione attesa', value: null, note: 'Caricamento fonte live', source: 'Commissione europea', url: 'https://economy-finance.ec.europa.eu/economic-surveillance-eu-member-states/country-pages-including-country-reports/italy/economic-forecast-italy_en', available: false },
+    { label: 'Inflazione prezzata', value: null, note: 'In attesa di feed live BTP', source: 'Breakeven BTP', url: 'https://www.dt.mef.gov.it/it/debito_pubblico/titoli_di_stato/quali_sono_titoli/btp_italia/', available: false },
+  ],
+  method: {
+    title: 'Breakeven inflation italiana',
+    formula: 'Rendimento nominale BTP - rendimento reale BTP Italia/BTPei con scadenza comparabile = inflazione media annua implicita.',
+    improvement: 'Il dato va calcolato con rendimenti lordi a scadenza live di due bond con durata residua almeno 5 anni e scadenza quasi identica. Se manca il rendimento reale live, mostrare un numero sarebbe fuorviante.',
+  },
+};
+
 const financialNews = [
   {
     category: 'Banche centrali',
@@ -456,6 +469,8 @@ function MacroOverview({ theme, setTheme, assets }) {
         </article>
       </section>
 
+      {region === 'Europa' && <ItalyInflationFocus />}
+
       <section className="sectionHeading macroSignalsHeading"><div><h2>Segnali ad alta priorità</h2><p>Indicatori con maggiore utilità per leggere ciclo, inflazione e stress finanziario.</p></div><span className="updated">Dati dimostrativi</span></section>
       <section className="signalGrid">
         {current.signals.filter((signal) => signal.priority === 'Alta').map((signal) => <MacroSignalCard signal={signal} key={signal.title} />)}
@@ -466,6 +481,67 @@ function MacroOverview({ theme, setTheme, assets }) {
         {current.signals.filter((signal) => signal.priority === 'Media').map((signal) => <MacroSignalCard signal={signal} key={signal.title} />)}
       </section>
       <p className="macroDisclaimer">Questi segnali sono euristiche informative, non previsioni certe né raccomandazioni d’investimento. Vanno valutati insieme ai dati macroeconomici e al contesto di mercato.</p>
+    </>
+  );
+}
+
+function ItalyInflationFocus() {
+  const [focus, setFocus] = useState(italyInflationFallback);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    let active = true;
+
+    async function updateItalyInflation() {
+      try {
+        setLoading(true);
+        const response = await fetch('/api/italy-inflation');
+        const data = await response.json();
+        if (!active) return;
+        if (!response.ok) throw new Error(data.details || data.error || 'Fonte non disponibile');
+        setFocus(data);
+        setError('');
+      } catch (requestError) {
+        if (active) setError(requestError.message);
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+
+    updateItalyInflation();
+    return () => { active = false; };
+  }, []);
+
+  const items = focus.items || italyInflationFallback.items;
+  const method = focus.method || italyInflationFallback.method;
+  const updatedAt = focus.updatedAt ? formatUpdateTime(focus.updatedAt) : null;
+
+  return (
+    <>
+      <section className="sectionHeading macroSignalsHeading">
+        <div><h2>Focus Italia: inflazione</h2><p>Inflazione osservata, scenario atteso e stima di mercato tramite breakeven su BTP.</p></div>
+        <span className="updated">{loading ? 'Aggiornamento...' : updatedAt ? `Aggiornato alle ${updatedAt}` : 'Italia'}</span>
+      </section>
+      {error && <div className="refreshError">Focus Italia non aggiornato: {error}</div>}
+      <section className="italyInflationPanel">
+        <div className="italyInflationCards">
+          {items.map((item) => (
+            <article className="card italyInflationCard" key={item.label}>
+              <span>{item.label}</span>
+              <strong>{Number.isFinite(item.value) ? `${formatPortfolioNumber(item.value)}%` : 'N/D'}</strong>
+              <small>{item.note}</small>
+              <a href={item.url} target="_blank" rel="noreferrer">{item.source}<ExternalLink size={12} /></a>
+            </article>
+          ))}
+        </div>
+        <article className="card italyInflationMethod">
+          <span className="overline">METODO</span>
+          <strong>{method.title}</strong>
+          <p>{method.formula}</p>
+          <small>{method.improvement}</small>
+        </article>
+      </section>
     </>
   );
 }
@@ -869,9 +945,31 @@ function buildBasketPoints(history, weights) {
   })).filter((point) => Number.isFinite(point.close));
 }
 
-function AnalysisOverview({ theme, setTheme, assets, favorites }) {
-  const initialSymbols = assets.filter((item) => favorites.has(item.symbol)).slice(0, 4).map((item) => item.symbol);
+function AnalysisOverview({ theme, setTheme, assets, favorites, transactions, addAsset }) {
+  const portfolioSymbols = useMemo(() => {
+    const quantities = new Map();
+    transactions.forEach((transaction) => {
+      const multiplier = transaction.type === 'sell' ? -1 : 1;
+      quantities.set(transaction.symbol, (quantities.get(transaction.symbol) || 0) + multiplier * Number(transaction.quantity || 0));
+    });
+    return new Set([...quantities.entries()].filter(([, quantity]) => quantity > 0).map(([symbol]) => symbol));
+  }, [transactions]);
+  const analysisAssets = useMemo(() => assets
+    .filter((item) => favorites.has(item.symbol) || portfolioSymbols.has(item.symbol) || item.custom)
+    .map((item) => ({
+      ...item,
+      tags: [
+        favorites.has(item.symbol) ? 'Preferito' : '',
+        portfolioSymbols.has(item.symbol) ? 'Portafoglio' : '',
+        item.custom ? 'Aggiunto' : '',
+      ].filter(Boolean),
+    })), [assets, favorites, portfolioSymbols]);
+  const initialSymbols = analysisAssets.slice(0, 8).map((item) => item.symbol);
   const [selected, setSelected] = useState(initialSymbols);
+  const [assetQuery, setAssetQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [addError, setAddError] = useState('');
   const [years, setYears] = useState(3);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -886,6 +984,40 @@ function AnalysisOverview({ theme, setTheme, assets, favorites }) {
   const basketPoints = useMemo(() => basketActive ? buildBasketPoints(basketSeries, weights) : [], [basketActive, basketSeries, weights]);
   const metrics = [...history.map((item) => ({ symbol: item.symbol, ...historicalMetrics(item.points) })), ...(basketPoints.length ? [{ symbol: 'BASKET', ...historicalMetrics(basketPoints) }] : [])];
   const basketWeightTotal = selected.reduce((total, symbol) => total + (Number(weights[symbol]) || 0), 0);
+
+  useEffect(() => {
+    setSelected((current) => current.filter((symbol) => assets.some((item) => item.symbol === symbol)));
+  }, [assets]);
+
+  useEffect(() => {
+    if (assetQuery.trim().length < 2) {
+      setSearchResults([]);
+      setSearchLoading(false);
+      return undefined;
+    }
+
+    const controller = new AbortController();
+    const timeout = setTimeout(async () => {
+      setSearchLoading(true);
+      setAddError('');
+      try {
+        const response = await fetch(`/api/assets/search?q=${encodeURIComponent(assetQuery.trim())}`, { signal: controller.signal });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.details || data.error || 'Ricerca non disponibile');
+        setSearchResults(data.results || []);
+      } catch (requestError) {
+        if (requestError.name !== 'AbortError') setAddError(requestError.message);
+      } finally {
+        setSearchLoading(false);
+      }
+    }, 350);
+
+    return () => {
+      controller.abort();
+      clearTimeout(timeout);
+    };
+  }, [assetQuery]);
+
   const normalizedData = useMemo(() => {
     const rows = new Map();
     history.forEach((item) => {
@@ -914,6 +1046,27 @@ function AnalysisOverview({ theme, setTheme, assets, favorites }) {
       });
       return next;
     });
+  }
+
+  async function addAnalysisAsset(result) {
+    setAddError('');
+    try {
+      const alreadyAdded = assets.some((item) => item.symbol === result.symbol);
+      if (!alreadyAdded) await addAsset(result);
+      setSelected((current) => {
+        if (current.includes(result.symbol)) return current;
+        if (current.length >= 8) {
+          setAddError('Hai gia selezionato 8 strumenti. Deselezionane uno prima di aggiungerne un altro.');
+          return current;
+        }
+        return [...current, result.symbol];
+      });
+      setAssetQuery('');
+      setSearchResults([]);
+      setBasketActive(false);
+    } catch (requestError) {
+      setAddError(requestError.message);
+    }
   }
 
   async function runAnalysis() {
@@ -964,8 +1117,30 @@ function AnalysisOverview({ theme, setTheme, assets, favorites }) {
       <div className="demoNotice"><ShieldCheck size={15} /><span>Nessuna chiamata API al caricamento della pagina</span><b>{updatedAt ? `Analisi aggiornata alle ${formatUpdateTime(updatedAt)}` : 'Premi Esegui analisi'}</b></div>
 
       <section className="card analysisControls">
-        <div><span className="overline">CONFIGURAZIONE</span><h2>Seleziona gli strumenti</h2><p>Massimo 8 asset per analisi. Yahoo Finance è l’unica fonte utilizzata.</p></div>
-        <div className="analysisAssetPicker">{assets.map((item) => <button type="button" className={selected.includes(item.symbol) ? 'active' : ''} onClick={() => toggleAnalysisSymbol(item.symbol)} key={item.symbol}><span>{item.symbol}</span><small>{item.name}</small></button>)}</div>
+        <div><span className="overline">CONFIGURAZIONE</span><h2>Seleziona gli strumenti</h2><p>Preferiti, posizioni in portafoglio e strumenti aggiunti via Yahoo Finance. Massimo 8 asset selezionati per singola analisi.</p></div>
+        <div className="analysisSearchBlock">
+          <label className="assetSearchInput"><Search size={18} /><input value={assetQuery} onChange={(event) => setAssetQuery(event.target.value)} placeholder="Incolla ISIN o ticker, ad esempio IT0005648255 o AAPL..." /></label>
+          {searchLoading && <span className="assetSearchStatus">Ricerca Yahoo Finance in corso...</span>}
+          {addError && <span className="assetSearchError">{addError}</span>}
+          {!!searchResults.length && (
+            <div className="assetSearchResults analysisSearchResults">
+              {searchResults.map((result) => {
+                const alreadyAdded = assets.some((asset) => asset.symbol === result.symbol);
+                const alreadySelected = selected.includes(result.symbol);
+                return (
+                  <div className="assetSearchResult" key={`${result.symbol}-${result.exchange}`}>
+                    <span><strong>{result.name}</strong><small>{result.symbol} · {result.exchange || result.quoteType || 'Yahoo Finance'}</small></span>
+                    <button type="button" disabled={alreadySelected} onClick={() => addAnalysisAsset(result)}>
+                      {alreadySelected ? 'Selezionato' : alreadyAdded ? 'Seleziona' : 'Aggiungi'}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+        <div className="analysisAssetPicker">{analysisAssets.map((item) => <button type="button" className={selected.includes(item.symbol) ? 'active' : ''} onClick={() => toggleAnalysisSymbol(item.symbol)} key={item.symbol}><span>{item.symbol}</span><small>{item.name}</small>{!!item.tags.length && <em>{item.tags.join(' · ')}</em>}</button>)}</div>
+        {!analysisAssets.length && <div className="analysisEmpty small"><strong>Nessuno strumento disponibile</strong><span>Aggiungi preferiti, registra posizioni o cerca un nuovo ticker/ISIN.</span></div>}
         <div className="analysisRunBar"><label><span>Orizzonte</span><select value={years} onChange={(event) => { setYears(Number(event.target.value)); setBasketActive(false); }}><option value={1}>1 anno</option><option value={3}>3 anni</option><option value={5}>5 anni</option><option value={10}>10 anni</option></select></label><span>{selected.length}/8 strumenti</span><div className="analysisActions"><button className="basketButton" type="button" onClick={openBasket} disabled={selected.length < 2}>Crea basket</button><button type="button" onClick={runAnalysis} disabled={loading || !selected.length}><ChartNoAxesCombined size={16} />{loading ? 'Analisi in corso...' : 'Esegui analisi'}</button></div></div>
         {error && <div className="refreshError">{error}</div>}
       </section>
@@ -991,6 +1166,7 @@ function AnalysisOverview({ theme, setTheme, assets, favorites }) {
 }
 
 function assetGroupFromQuoteType(quoteType) {
+  if (quoteType === 'BOND') return 'Obbligazioni';
   if (quoteType === 'ETF' || quoteType === 'MUTUALFUND') return 'ETF e fondi';
   if (quoteType === 'INDEX') return 'Indici';
   if (quoteType === 'CRYPTOCURRENCY') return 'Crypto';
@@ -1200,7 +1376,7 @@ function App() {
         ) : page === 'portfolio' ? (
           <PortfolioOverview theme={theme} setTheme={setTheme} assets={assets} transactions={transactions} addTransaction={addTransaction} removeTransaction={removeTransaction} pricesUpdatedAt={pricesUpdatedAt} />
         ) : page === 'analysis' ? (
-          <AnalysisOverview theme={theme} setTheme={setTheme} assets={assets} favorites={favorites} />
+          <AnalysisOverview theme={theme} setTheme={setTheme} assets={assets} favorites={favorites} transactions={transactions} addAsset={addAsset} />
         ) : (
         <>
         <header>

@@ -17,6 +17,7 @@ const app = express();
 const port = Number(process.env.PORT || 3001);
 const PRICE_CACHE_MS = 15 * 60 * 1000;
 const HISTORY_CACHE_MS = 6 * 60 * 60 * 1000;
+const ITALY_INFLATION_CACHE_MS = 60 * 60 * 1000;
 
 const instruments = [
   { symbol: 'SPX', twelve: 'SPX', yahoo: '^GSPC' },
@@ -55,6 +56,7 @@ const customQuoteCache = new Map();
 const assetSearchCache = new Map();
 const historyCache = new Map();
 let newsCache = { updatedAt: null, articles: [] };
+let italyInflationCache = { expiresAt: 0, value: null };
 
 const round = (value) => Math.round(value * 100) / 100;
 const NEWS_TIME_ZONE = 'Europe/Rome';
@@ -129,6 +131,189 @@ function calculateChanges(values) {
     price,
     daily: previous ? round(((price - previous) / previous) * 100) : null,
     monthly: monthStart ? round(((price - monthStart) / monthStart) * 100) : null,
+  };
+}
+
+const normalizeText = (value) => String(value || '')
+  .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+  .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+  .replace(/<[^>]+>/g, ' ')
+  .replace(/\s+/g, ' ')
+  .trim();
+
+const parseDecimal = (value) => Number(String(value).replace(',', '.'));
+
+async function fetchText(url) {
+  const response = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+  if (!response.ok) throw new Error(`Fonte non disponibile (${response.status})`);
+  return response.text();
+}
+
+async function fetchItalyCurrentInflation() {
+  const url = 'https://www.istat.it/en/tag/inflation/';
+  const text = normalizeText(await fetchText(url));
+  const match = text.match(/In ([A-Za-z]+ \d{4}) the CPI \+([\d.,]+)% compared with the previous month and \+([\d.,]+)% year-over-year/i);
+  if (!match) throw new Error('Dato ISTAT non trovato');
+  return {
+    label: 'Inflazione corrente',
+    value: parseDecimal(match[3]),
+    period: match[1],
+    note: `CPI Italia, ${match[1]}`,
+    source: 'ISTAT',
+    url,
+  };
+}
+
+async function fetchItalyExpectedInflation() {
+  const url = 'https://tradingeconomics.com/italy/inflation-cpi';
+  const text = normalizeText(await fetchText(url));
+  const match = text.match(/Inflation Rate in Italy is expected to be ([\d.]+) percent by the end of this quarter/i);
+  if (!match) throw new Error('Previsione Trading Economics non trovata');
+  return {
+    label: 'Inflazione attesa',
+    value: parseDecimal(match[1]),
+    period: 'fine trimestre',
+    note: 'Forecast fine trimestre',
+    source: 'Trading Economics',
+    url,
+  };
+}
+
+function parseInvestingBondPage(html, fallback) {
+  const text = normalizeText(html);
+  const compact = String(html || '').replace(/\s+/g, ' ');
+  const prevClose = compact.match(/data-test="prevClose"[^>]*>.*?<span>([\d.,]+)<\/span>/i)?.[1]
+    || text.match(/Prev\. Close\s+([\d.,]+)/i)?.[1];
+  const coupon = text.match(/Coupon\s+([\d.,]+)/i)?.[1] || fallback.coupon;
+  const maturity = text.match(/Maturity Date\s+([A-Za-z]{3,9} \d{1,2}, \d{4})/i)?.[1] || fallback.maturity;
+  return {
+    ...fallback,
+    price: parseDecimal(prevClose),
+    coupon: parseDecimal(coupon),
+    maturity,
+  };
+}
+
+async function fetchInvestingBondName(isin) {
+  const url = `https://www.investing.com/rates-bonds/${isin.toLowerCase()}`;
+  const html = await fetchText(url);
+  const title = String(html).match(/<title[^>]*>(.*?)<\/title>/i)?.[1] || '';
+  const cleaned = title
+    .replace(/\s*-\s*Investing\.com\s*$/i, '')
+    .replace(/\s+Bond Yield\s*$/i, '')
+    .trim();
+  return cleaned && !cleaned.toUpperCase().includes(isin.toUpperCase()) ? { name: cleaned, url } : null;
+}
+
+async function fetchBorsaItalianaBondName(isin) {
+  if (!isin.toUpperCase().startsWith('IT')) return null;
+  const url = `https://www.borsaitaliana.it/borsa/obbligazioni/mot/btp/scheda/${isin.toUpperCase()}-MOTX.html?lang=it`;
+  const html = await fetchText(url);
+  const title = String(html).match(/<title[^>]*>(.*?)<\/title>/i)?.[1] || '';
+  const cleaned = title
+    .replace(/\s+quotazioni in tempo reale.*$/i, '')
+    .replace(/\s*\|\s*.*$/i, '')
+    .trim();
+  return cleaned && !cleaned.toUpperCase().includes(isin.toUpperCase()) ? { name: cleaned, url } : null;
+}
+
+async function enrichIsinSearchResults(query, results) {
+  if (!/^[A-Z]{2}[A-Z0-9]{10}$/i.test(query)) return results;
+  const normalizedQuery = query.toUpperCase();
+  const needsName = results.some((item) => (
+    item.symbol?.toUpperCase().includes(normalizedQuery)
+    && (!item.name || item.name.toUpperCase() === item.symbol.toUpperCase() || item.name.toUpperCase().includes(normalizedQuery))
+  ));
+  if (!needsName) return results;
+
+  const bondInfo = await fetchBorsaItalianaBondName(normalizedQuery).catch(() => null)
+    || await fetchInvestingBondName(normalizedQuery).catch(() => null);
+  if (!bondInfo) return results;
+  return results.map((item) => item.symbol?.toUpperCase().includes(normalizedQuery)
+    ? { ...item, name: bondInfo.name, quoteType: 'BOND', exchange: item.exchange || 'Investing.com' }
+    : item);
+}
+
+function yearsBetween(startDate, endDate) {
+  return Math.max(0, (endDate.getTime() - startDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000));
+}
+
+function priceFromYield({ coupon, maturityYears, face = 100 }, annualYield) {
+  const periods = Math.max(1, Math.round(maturityYears * 2));
+  const periodCoupon = (face * coupon / 100) / 2;
+  const periodYield = annualYield / 2;
+  let price = 0;
+  for (let period = 1; period <= periods; period += 1) {
+    price += periodCoupon / ((1 + periodYield) ** period);
+  }
+  price += face / ((1 + periodYield) ** periods);
+  return price;
+}
+
+function yieldToMaturity({ price, coupon, maturity }) {
+  if (!Number.isFinite(price) || !Number.isFinite(coupon)) return null;
+  const maturityYears = yearsBetween(new Date(), new Date(maturity));
+  if (!Number.isFinite(maturityYears) || maturityYears <= 0.25) return null;
+  let low = -0.05;
+  let high = 0.15;
+  for (let index = 0; index < 80; index += 1) {
+    const mid = (low + high) / 2;
+    const estimatedPrice = priceFromYield({ coupon, maturityYears }, mid);
+    if (estimatedPrice > price) low = mid;
+    else high = mid;
+  }
+  return round(((low + high) / 2) * 100);
+}
+
+async function fetchItalyMarketInflation() {
+  const realUrl = 'https://www.investing.com/rates-bonds/it0005648255';
+  const nominalUrl = 'https://www.investing.com/rates-bonds/it0005668220';
+  const [realHtml, nominalHtml] = await Promise.all([fetchText(realUrl), fetchText(nominalUrl)]);
+  const realBond = parseInvestingBondPage(realHtml, {
+    name: 'BTP Italia 1,85% 04/06/2032',
+    coupon: 1.85,
+    maturity: 'Jun 04, 2032',
+  });
+  const nominalBond = parseInvestingBondPage(nominalHtml, {
+    name: 'BTP nominale 3,25% 15/11/2032',
+    coupon: 3.25,
+    maturity: 'Nov 15, 2032',
+  });
+  const realYield = yieldToMaturity(realBond);
+  const nominalYield = yieldToMaturity(nominalBond);
+  if (!Number.isFinite(realYield) || !Number.isFinite(nominalYield)) throw new Error('Rendimenti BTP non calcolabili');
+  const value = round(nominalYield - realYield);
+  return {
+    label: 'Inflazione prezzata',
+    value,
+    period: '2032',
+    note: `${nominalYield}% nominale - ${realYield}% reale`,
+    source: 'Investing.com',
+    url: realUrl,
+    available: true,
+    components: { nominalBond, realBond, nominalYield, realYield },
+  };
+}
+
+async function fetchItalyInflationFocus() {
+  const [current, expected, market] = await Promise.all([
+    fetchItalyCurrentInflation().catch((error) => ({ label: 'Inflazione corrente', value: null, note: error.message, source: 'ISTAT', url: 'https://www.istat.it/en/tag/inflation/', available: false })),
+    fetchItalyExpectedInflation().catch((error) => ({ label: 'Inflazione attesa', value: null, note: error.message, source: 'Trading Economics', url: 'https://tradingeconomics.com/italy/inflation-cpi', available: false })),
+    fetchItalyMarketInflation().catch((error) => ({ label: 'Inflazione prezzata', value: null, note: error.message, source: 'Breakeven BTP', available: false })),
+  ]);
+
+  return {
+    updatedAt: new Date().toISOString(),
+    items: [
+      { available: Number.isFinite(current.value), ...current },
+      { available: Number.isFinite(expected.value), ...expected },
+      market,
+    ],
+    method: {
+      title: 'Breakeven inflation italiana',
+      formula: 'Rendimento lordo a scadenza del BTP nominale 2032 - rendimento reale stimato del BTP Italia 2032.',
+      improvement: 'Questa e una proxy di mercato, non una previsione pura: incorpora premi di liquidita, rischio Italia, differenza di scadenza e caratteristiche del BTP Italia. Per una misura istituzionale euro area sarebbe preferibile una curva inflation swap; per inflazione italiana FOI il confronto BTP nominale/BTP Italia e piu coerente ma piu rumoroso.',
+    },
   };
 }
 
@@ -227,6 +412,7 @@ app.get('/api/assets/search', async (req, res) => {
         quoteType: item.quoteType,
         exchange: item.exchDisp || item.exchange || '',
       }));
+    results = await enrichIsinSearchResults(query, results);
 
     if (!results.length && process.env.TWELVE_DATA_API_KEY) {
       const twelveParams = new URLSearchParams({ symbol: query, apikey: process.env.TWELVE_DATA_API_KEY });
@@ -285,6 +471,17 @@ app.get('/api/history', async (req, res) => {
     res.json({ updatedAt: new Date().toISOString(), years, series });
   } catch (error) {
     res.status(502).json({ error: 'Impossibile recuperare le serie storiche', details: error.message, series: [] });
+  }
+});
+
+app.get('/api/italy-inflation', async (req, res) => {
+  try {
+    if (req.query.refresh !== '1' && italyInflationCache.expiresAt > Date.now()) return res.json(italyInflationCache.value);
+    const value = await fetchItalyInflationFocus();
+    italyInflationCache = { expiresAt: Date.now() + ITALY_INFLATION_CACHE_MS, value };
+    res.json(value);
+  } catch (error) {
+    res.status(502).json({ error: 'Impossibile aggiornare il focus inflazione Italia', details: error.message });
   }
 });
 
