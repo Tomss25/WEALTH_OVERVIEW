@@ -945,6 +945,15 @@ function buildBasketPoints(history, weights) {
   })).filter((point) => Number.isFinite(point.close));
 }
 
+function loadSavedBaskets() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('wealth-analysis-baskets') || '[]');
+    return Array.isArray(saved) ? saved : [];
+  } catch {
+    return [];
+  }
+}
+
 function AnalysisOverview({ theme, setTheme, assets, favorites, transactions, addAsset }) {
   const portfolioSymbols = useMemo(() => {
     const quantities = new Map();
@@ -979,10 +988,14 @@ function AnalysisOverview({ theme, setTheme, assets, favorites, transactions, ad
   const [basketOpen, setBasketOpen] = useState(false);
   const [basketActive, setBasketActive] = useState(false);
   const [weights, setWeights] = useState({});
+  const [basketName, setBasketName] = useState('');
+  const [savedBaskets, setSavedBaskets] = useState(loadSavedBaskets);
 
   const basketSeries = history.filter((item) => selected.includes(item.symbol));
   const basketPoints = useMemo(() => basketActive ? buildBasketPoints(basketSeries, weights) : [], [basketActive, basketSeries, weights]);
-  const metrics = [...history.map((item) => ({ symbol: item.symbol, ...historicalMetrics(item.points) })), ...(basketPoints.length ? [{ symbol: 'BASKET', ...historicalMetrics(basketPoints) }] : [])];
+  const visibleHistory = basketPoints.length ? [] : history;
+  const visibleSeries = basketPoints.length ? [{ symbol: 'BASKET', points: basketPoints }] : history;
+  const metrics = visibleSeries.map((item) => ({ symbol: item.symbol, ...historicalMetrics(item.points) }));
   const basketWeightTotal = selected.reduce((total, symbol) => total + (Number(weights[symbol]) || 0), 0);
 
   useEffect(() => {
@@ -1020,7 +1033,7 @@ function AnalysisOverview({ theme, setTheme, assets, favorites, transactions, ad
 
   const normalizedData = useMemo(() => {
     const rows = new Map();
-    history.forEach((item) => {
+    visibleHistory.forEach((item) => {
       const base = item.points[0]?.close;
       item.points.forEach((point) => {
         const row = rows.get(point.date) || { date: point.date };
@@ -1034,7 +1047,7 @@ function AnalysisOverview({ theme, setTheme, assets, favorites, transactions, ad
       rows.set(point.date, row);
     });
     return [...rows.values()].sort((a, b) => a.date.localeCompare(b.date));
-  }, [basketPoints, history]);
+  }, [basketPoints, visibleHistory]);
 
   function toggleAnalysisSymbol(symbol) {
     setSelected((current) => {
@@ -1069,7 +1082,7 @@ function AnalysisOverview({ theme, setTheme, assets, favorites, transactions, ad
     }
   }
 
-  async function runAnalysis() {
+  async function runAnalysis({ activateBasket = false } = {}) {
     if (!selected.length) return;
     setLoading(true);
     setError('');
@@ -1077,11 +1090,12 @@ function AnalysisOverview({ theme, setTheme, assets, favorites, transactions, ad
       const response = await fetch(`/api/history?symbols=${encodeURIComponent(selected.join(','))}&years=${years}`);
       const data = await response.json();
       if (!response.ok) throw new Error(data.details || data.error);
-      setHistory(data.series || []);
+      const series = data.series || [];
+      setHistory(series);
       setHistoryYears(years);
-      setBasketActive(false);
+      setBasketActive(activateBasket && series.length === selected.length);
       setUpdatedAt(data.updatedAt);
-      if ((data.series || []).length < selected.length) setError('Alcune serie non sono disponibili su Yahoo Finance.');
+      if (series.length < selected.length) setError('Alcune serie non sono disponibili su Yahoo Finance.');
     } catch (requestError) {
       setError(requestError.message);
     } finally {
@@ -1107,8 +1121,54 @@ function AnalysisOverview({ theme, setTheme, assets, favorites, transactions, ad
       setBasketActive(true);
       return;
     }
-    await runAnalysis();
-    setBasketActive(true);
+    await runAnalysis({ activateBasket: true });
+  }
+
+  function saveBasket() {
+    if (selected.length < 2) {
+      setError('Seleziona almeno 2 strumenti per salvare un basket.');
+      return;
+    }
+    if (Math.abs(basketWeightTotal - 100) > 0.01) {
+      setError('La somma dei pesi del basket deve essere pari al 100%.');
+      return;
+    }
+    const name = basketName.trim() || `Basket ${new Date().toLocaleDateString('it-IT')}`;
+    const basket = {
+      id: crypto.randomUUID(),
+      name,
+      symbols: selected,
+      weights: Object.fromEntries(selected.map((symbol) => [symbol, Number(weights[symbol]) || 0])),
+      years,
+      createdAt: new Date().toISOString(),
+    };
+    setSavedBaskets((current) => {
+      const next = [basket, ...current.filter((item) => item.name.toLowerCase() !== name.toLowerCase())].slice(0, 20);
+      localStorage.setItem('wealth-analysis-baskets', JSON.stringify(next));
+      return next;
+    });
+    setBasketName(name);
+    setError('');
+  }
+
+  function loadBasket(basket) {
+    setSelected(basket.symbols.filter((symbol) => assets.some((item) => item.symbol === symbol)).slice(0, 8));
+    setWeights(basket.weights || {});
+    setYears(basket.years || 3);
+    setBasketName(basket.name);
+    setBasketOpen(true);
+    setBasketActive(false);
+    setHistory([]);
+    setHistoryYears(null);
+    setError('');
+  }
+
+  function removeBasket(id) {
+    setSavedBaskets((current) => {
+      const next = current.filter((item) => item.id !== id);
+      localStorage.setItem('wealth-analysis-baskets', JSON.stringify(next));
+      return next;
+    });
   }
 
   return (
@@ -1147,18 +1207,31 @@ function AnalysisOverview({ theme, setTheme, assets, favorites, transactions, ad
 
       {basketOpen && <section className="card basketBuilder">
         <div><span className="overline">BASKET PERSONALIZZATO</span><h2>Attribuisci i pesi</h2><p>La performance utilizza pesi iniziali fissi e le serie storiche già scaricate.</p></div>
+        <label className="basketNameInput"><span>Nome basket</span><input value={basketName} onChange={(event) => setBasketName(event.target.value)} placeholder="Es. Core Italia, Tech globale, Bond ladder..." /></label>
         <div className="basketWeights">{selected.map((symbol) => <label key={symbol}><span><strong>{symbol}</strong><small>{assets.find((item) => item.symbol === symbol)?.name}</small></span><div><input type="number" min="0" max="100" step="0.1" value={weights[symbol] ?? ''} onChange={(event) => { setWeights({ ...weights, [symbol]: event.target.value }); setBasketActive(false); }} /><b>%</b></div></label>)}</div>
-        <div className="basketFooter"><span className={Math.abs(basketWeightTotal - 100) <= .01 ? 'valid' : 'invalid'}>Totale pesi: <strong>{formatPortfolioNumber(basketWeightTotal)}%</strong></span><button type="button" onClick={runBasketAnalysis} disabled={loading || Math.abs(basketWeightTotal - 100) > .01}><ChartNoAxesCombined size={16} />Analizza basket</button></div>
+        <div className="basketFooter"><span className={Math.abs(basketWeightTotal - 100) <= .01 ? 'valid' : 'invalid'}>Totale pesi: <strong>{formatPortfolioNumber(basketWeightTotal)}%</strong></span><div className="basketFooterActions"><button className="basketSaveButton" type="button" onClick={saveBasket} disabled={Math.abs(basketWeightTotal - 100) > .01}>Salva basket</button><button type="button" onClick={runBasketAnalysis} disabled={loading || Math.abs(basketWeightTotal - 100) > .01}><ChartNoAxesCombined size={16} />Analizza basket</button></div></div>
+      </section>}
+
+      {!!savedBaskets.length && <section className="card savedBaskets">
+        <div><span className="overline">BASKET SALVATI</span><h2>Richiama un basket</h2><p>Memorizzati in questo browser tramite localStorage.</p></div>
+        <div className="savedBasketList">
+          {savedBaskets.map((basket) => (
+            <article key={basket.id}>
+              <span><strong>{basket.name}</strong><small>{basket.symbols.join(' · ')} · {basket.years} {basket.years === 1 ? 'anno' : 'anni'}</small></span>
+              <div><button type="button" onClick={() => loadBasket(basket)}>Carica</button><button type="button" onClick={() => removeBasket(basket.id)}>Elimina</button></div>
+            </article>
+          ))}
+        </div>
       </section>}
 
       {!!history.length && <>
         <section className="sectionHeading"><div><h2>Performance storica</h2><p>Andamento normalizzato a base 100.</p></div><span className="updated">{years} {years === 1 ? 'anno' : 'anni'}</span></section>
-        <article className="card analysisChart"><ResponsiveContainer width="100%" height="100%"><AreaChart data={normalizedData}><CartesianGrid strokeDasharray="3 3" opacity={0.15} /><XAxis dataKey="date" tick={{ fontSize: 10 }} minTickGap={45} /><YAxis tick={{ fontSize: 10 }} /><Tooltip />{history.map((item, index) => <Area type="monotone" dataKey={item.symbol} stroke={['#5a8cff','#43d19e','#f0a764','#b18bff','#ff7185','#64c7ea','#f1cf63','#7f93b5'][index]} fill="transparent" strokeWidth={2} connectNulls key={item.symbol} />)}{basketPoints.length && <Area type="monotone" dataKey="BASKET" stroke="#ffd166" fill="transparent" strokeWidth={3.5} connectNulls />}</AreaChart></ResponsiveContainer></article>
+        <article className="card analysisChart"><ResponsiveContainer width="100%" height="100%"><AreaChart data={normalizedData}><CartesianGrid strokeDasharray="3 3" opacity={0.15} /><XAxis dataKey="date" tick={{ fontSize: 10 }} minTickGap={45} /><YAxis tick={{ fontSize: 10 }} /><Tooltip />{visibleSeries.map((item, index) => <Area type="monotone" dataKey={item.symbol} stroke={item.symbol === 'BASKET' ? '#ffd166' : ['#5a8cff','#43d19e','#f0a764','#b18bff','#ff7185','#64c7ea','#f1cf63','#7f93b5'][index]} fill="transparent" strokeWidth={item.symbol === 'BASKET' ? 3.5 : 2} connectNulls key={item.symbol} />)}</AreaChart></ResponsiveContainer></article>
 
         <section className="sectionHeading"><div><h2>Metriche</h2><p>Rendimento totale, volatilità annualizzata e drawdown.</p></div></section>
         <section className="analysisMetricGrid">{metrics.map((item) => <article className="card analysisMetric" key={item.symbol}><span>{item.symbol}</span><strong>{formatPortfolioNumber(item.price)}</strong><div><span>Rendimento <Change value={item.returnPct} /></span><span>Volatilità <b>{formatPortfolioNumber(item.volatility)}%</b></span><span>Max drawdown <b className="negativeText">{formatPortfolioNumber(item.maxDrawdown)}%</b></span></div></article>)}</section>
 
-        {history.length > 1 && <><section className="sectionHeading"><div><h2>Matrice di correlazione</h2><p>Correlazione dei rendimenti giornalieri.</p></div></section><section className="card correlationMatrix" style={{ '--correlation-columns': history.length + 1 }}><span />{history.map((item) => <strong key={`h-${item.symbol}`}>{item.symbol}</strong>)}{history.flatMap((row) => [<strong key={`r-${row.symbol}`}>{row.symbol}</strong>, ...history.map((column) => { const value = correlation(row.points, column.points); return <span className={value >= .5 ? 'high' : value <= 0 ? 'low' : 'medium'} key={`${row.symbol}-${column.symbol}`}>{value.toFixed(2)}</span>; })])}</section></>}
+        {visibleSeries.length > 1 && <><section className="sectionHeading"><div><h2>Matrice di correlazione</h2><p>Correlazione dei rendimenti giornalieri.</p></div></section><section className="card correlationMatrix" style={{ '--correlation-columns': visibleSeries.length + 1 }}><span />{visibleSeries.map((item) => <strong key={`h-${item.symbol}`}>{item.symbol}</strong>)}{visibleSeries.flatMap((row) => [<strong key={`r-${row.symbol}`}>{row.symbol}</strong>, ...visibleSeries.map((column) => { const value = correlation(row.points, column.points); return <span className={value >= .5 ? 'high' : value <= 0 ? 'low' : 'medium'} key={`${row.symbol}-${column.symbol}`}>{value.toFixed(2)}</span>; })])}</section></>}
       </>}
       {!history.length && !loading && <div className="card analysisEmpty"><ChartNoAxesCombined size={28} /><strong>Configura e avvia la prima analisi</strong><span>Le serie storiche verranno richieste solo dopo il clic.</span></div>}
     </>
