@@ -202,3 +202,53 @@ h1 { margin: 0; font-size: 27px; letter-spacing: -.7px; } h2 { margin: 0; }
 @media(max-width:1050px){.analysisMetricGrid{grid-template-columns:repeat(2,1fr)}.analysisAssetPicker{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:720px){.analysisMetricGrid{grid-template-columns:1fr}.analysisAssetPicker{grid-template-columns:repeat(2,minmax(0,1fr))}.analysisRunBar{grid-template-columns:1fr}.analysisChart{height:300px}}
 @media(max-width:720px){.analysisActions,.basketFooter{align-items:stretch;flex-direction:column}.analysisActions button,.basketFooter button{justify-content:center}.basketWeights{grid-template-columns:1fr}}
+
+.marketsOverviewPage { margin: -30px calc(clamp(24px,4vw,58px) * -1) -60px; min-height: 100vh; color: #1f2328; background: #fff; font-family: Arial, Helvetica, sans-serif; }
+.overviewTickerStrip { min-height: 76px; padding: 13px 20px 10px; display: grid; grid-template-columns: repeat(8,minmax(118px,1fr)) 28px 28px; gap: 18px; align-items: start; border-bottom: 1px solid #dde3ea; background: #fff; }
+.overviewTickerStrip article { min-width: 0; position: relative; display: grid; grid-template-columns: minmax(0,1fr) 70px; gap: 2px 8px; align-items: start; }
+.overviewTickerStrip strong,.worldIndexRow strong,.overviewList strong { overflow: hidden; color: #075eb8; font-size: 12px; line-height: 1.2; text-overflow: ellipsis; white-space: nowrap; }
+.overviewTickerStrip article > span:not(.miniSpark):not(.overviewChange) { color: #262a30; font-size: 13px; font-weight: 700; }
+.overviewTickerStrip .overviewChange { grid-column: 1; }
+.overviewTickerStrip .miniSpark { grid-column: 2; grid-row: 2 / span 2; align-self: center; }
+.overviewTickerStrip button { width: 28px; height: 28px; margin-top: 11px; display: grid; place-items: center; border: 0; color: #555; background: transparent; }
+.marketsOverviewLayout { display: grid; grid-template-columns: minmax(0,1fr) 344px; gap: 24px; padding: 25px 28px 32px; }
+.marketsOverviewMain h1 { margin: 0 0 16px; color: #0d1b2a; font-size: 34px; line-height: 1.05; letter-spacing: -.8px; }
+.overviewTitleRow { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.overviewTitleRow h2 { color: #121820; font-size: 25px; letter-spacing: -.4px; }
+.overviewTitleRow span { font-weight: 500; }
+.overviewTitleRow div { display: flex; gap: 24px; color: #40464f; }
+.worldIndexGrid { display: grid; grid-template-columns: repeat(3,minmax(250px,1fr)); gap: 16px; }
+.worldIndexRegion h3 { margin: 0 0 8px; color: #2b3037; font-size: 14px; }
+.worldIndexTable { overflow: hidden; border: 1px solid #d7dde5; border-radius: 3px; background: #fff; }
+.worldIndexHead,.worldIndexRow { display: grid; grid-template-columns: minmax(88px,1fr) 82px 90px 74px; gap: 8px; align-items: center; min-height: 40px; padding: 0 8px; border-bottom: 1px solid #e1e6ed; }
+.worldIndexHead { min-height: 32px; color: #1d2530; font-size: 12px; }
+.worldIndexHead span:nth-child(3),.worldIndexRow > span:nth-child(3) { text-align: right; }
+.worldIndexRow:last-child { border-bottom: 0; }
+.worldIndexRow strong { font-size: 14px; }
+.worldIndexRow > span:nth-child(3) { color: #2a2f35; font-size: 15px; font-weight: 500; }
+.overviewChange { color: #00806b; font-size: 13px; font-weight: 800; text-align: right; white-space: nowrap; }
+.overviewChange.negative { color: #e00022; }
+.overviewChange.positive { color: #00806b; }
+.miniSpark { height: 22px; display: flex; align-items: end; gap: 2px; border-bottom: 1px dotted rgba(50,50,50,.35); }
+.miniSpark i { flex: 1; min-width: 3px; border-radius: 2px 2px 0 0; background: #0b8b65; opacity: .92; }
+.miniSpark.negative i { background: #e53145; }
+.miniSpark i:nth-child(1) { height: 26%; }.miniSpark i:nth-child(2) { height: 52%; }.miniSpark i:nth-child(3) { height: 44%; }.miniSpark i:nth-child(4) { height: 62%; }.miniSpark i:nth-child(5) { height: 48%; }.miniSpark i:nth-child(6) { height: 35%; }.miniSpark i:nth-child(7) { height: 41%; }
+.miniSpark.negative i:nth-child(1) { height: 58%; }.miniSpark.negative i:nth-child(2) { height: 45%; }.miniSpark.negative i:nth-child(3) { height: 38%; }.miniSpark.negative i:nth-child(4) { height: 34%; }.miniSpark.negative i:nth-child(5) { height: 28%; }.miniSpark.negative i:nth-child(6) { height: 22%; }.miniSpark.negative i:nth-child(7) { height: 26%; }
+.overviewHeatmapSection { margin-top: 32px; }
+.overviewHeatmapSection .stockHeatmapCard { height: 520px; border-color: #d7dde5; background: #fff; box-shadow: none; }
+.overviewSidePanel { overflow: hidden; align-self: start; border: 1px solid #d7dde5; border-radius: 7px; background: #fff; box-shadow: 0 12px 28px rgba(20,30,45,.08); }
+.overviewLookup { margin: 16px; min-height: 40px; display: flex; align-items: center; gap: 7px; padding: 0 12px; border: 1px solid #d7dde5; border-radius: 4px; color: #5d6268; background: #f5f7fa; }
+.overviewLookup input { width: 100%; border: 0; outline: 0; color: #20242a; background: transparent; font-size: 16px; font-weight: 700; }
+.overviewSidePanel section { padding: 14px 16px; border-top: 1px solid #e1e6ed; }
+.overviewSidePanel h3 { margin: 0 0 12px; color: #242830; font-size: 18px; }
+.overviewList { display: grid; gap: 10px; }
+.overviewList article { display: grid; grid-template-columns: minmax(0,1fr) 58px 86px; gap: 8px; align-items: center; }
+.overviewList span:first-child { min-width: 0; display: grid; gap: 2px; }
+.overviewList small { overflow: hidden; color: #252a31; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.overviewList b { display: block; color: #22272e; font-size: 12px; text-align: right; }
+.overviewList .overviewChange { display: block; font-size: 11px; }
+.portfolioPanelHead,.portfolioMiniSummary { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.portfolioPanelHead button { min-height: 24px; padding: 0 10px; border: 1px solid #d7dde5; border-radius: 14px; color: #20242a; background: #f5f7fa; font-size: 12px; font-weight: 700; }
+.portfolioMiniSummary { padding: 10px 0; border-top: 1px dashed #d7dde5; border-bottom: 1px solid #d7dde5; color: #252a31; font-size: 12px; }
+.overviewEmptySide { margin: 0; color: #68707a; font-size: 12px; }
+@media(max-width:1180px){.marketsOverviewLayout{grid-template-columns:1fr}.overviewSidePanel{max-width:none}.worldIndexGrid{grid-template-columns:1fr}.overviewTickerStrip{grid-template-columns:repeat(2,minmax(150px,1fr));}.overviewTickerStrip button{display:none}}

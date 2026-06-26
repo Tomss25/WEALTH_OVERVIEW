@@ -1248,6 +1248,155 @@ function assetGroupFromQuoteType(quoteType) {
   return 'Azioni';
 }
 
+function formatOverviewValue(value) {
+  if (typeof value === 'number') return value.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return value || 'N/D';
+}
+
+function MiniSparkline({ value = 0 }) {
+  const positive = value >= 0;
+  return <span className={`miniSpark ${positive ? 'positive' : 'negative'}`}><i /><i /><i /><i /><i /><i /><i /></span>;
+}
+
+function OverviewChange({ value }) {
+  const positive = value >= 0;
+  return <span className={`overviewChange ${positive ? 'positive' : 'negative'}`}>{positive ? '+' : ''}{Number(value || 0).toFixed(2)}%</span>;
+}
+
+function normalizeOverviewAsset(asset) {
+  return {
+    ...asset,
+    price: asset?.price || 'N/D',
+    daily: Number.isFinite(asset?.daily) ? asset.daily : 0,
+    monthly: Number.isFinite(asset?.monthly) ? asset.monthly : 0,
+  };
+}
+
+function normalizeOverviewGroup(group) {
+  return String(group || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+}
+
+function DynamicMarketTickerStrip({ assets }) {
+  const items = assets.slice(0, 8).map(normalizeOverviewAsset);
+
+  return (
+    <section className="overviewTickerStrip">
+      {items.map((item) => (
+        <article key={item.symbol}>
+          <strong title={item.name}>{item.name}</strong>
+          <span>{item.price}</span>
+          <OverviewChange value={item.daily} />
+          <MiniSparkline value={item.daily} />
+        </article>
+      ))}
+      <button type="button" aria-label="Precedenti"><ChevronLeft size={18} /></button>
+      <button type="button" aria-label="Successivi"><ChevronRight size={18} /></button>
+    </section>
+  );
+}
+
+function DynamicWorldMarketsOverview({ assets }) {
+  const groupOrder = ['Indici', 'Valute', 'Materie prime', 'Crypto', 'Volatilità', 'Obbligazioni', 'Credito e spread'];
+  const groupedAssets = groupOrder
+    .map((group) => ({
+      group,
+      rows: assets.filter((asset) => normalizeOverviewGroup(asset.group) === normalizeOverviewGroup(group)).map(normalizeOverviewAsset),
+    }))
+    .filter((section) => section.rows.length)
+    .slice(0, 3);
+
+  return (
+    <section className="worldIndices">
+      <div className="overviewTitleRow"><h2>Panoramica mercati <span>-&gt;</span></h2><div><ChevronLeft size={17} /><ChevronRight size={17} /></div></div>
+      <div className="worldIndexGrid">
+        {groupedAssets.map(({ group, rows }) => (
+          <article className="worldIndexRegion" key={group}>
+            <h3>{group}</h3>
+            <div className="worldIndexTable">
+              <div className="worldIndexHead"><span>Strumento</span><span /><span>Prezzo</span><span>Oggi</span></div>
+              {rows.map((item) => (
+                <div className="worldIndexRow" key={`${group}-${item.symbol}`}>
+                  <strong title={item.name}>{item.name}</strong>
+                  <MiniSparkline value={item.daily} />
+                  <span>{formatOverviewValue(item.price)}</span>
+                  <OverviewChange value={item.daily} />
+                </div>
+              ))}
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function DynamicOverviewSidebar({ assets, transactions }) {
+  const trending = [...assets]
+    .map(normalizeOverviewAsset)
+    .sort((a, b) => Math.abs(b.daily) - Math.abs(a.daily))
+    .slice(0, 5);
+  const portfolioSymbols = [...new Set(transactions.map((item) => item.symbol))].slice(0, 5);
+  const portfolioRows = portfolioSymbols
+    .map((symbol) => assets.find((asset) => asset.symbol === symbol))
+    .filter(Boolean)
+    .map(normalizeOverviewAsset);
+  const customRows = assets.filter((item) => item.custom).slice(0, 3).map(normalizeOverviewAsset);
+
+  return (
+    <aside className="overviewSidePanel">
+      <label className="overviewLookup"><Search size={17} /><input placeholder="Quote Lookup" /></label>
+      <section>
+        <h3>Movimenti principali</h3>
+        <div className="overviewList">
+          {trending.map((item) => (
+            <article key={item.symbol}>
+              <span><strong>{item.symbol}</strong><small>{item.name}</small></span>
+              <MiniSparkline value={item.daily} />
+              <span><b>{item.price}</b><OverviewChange value={item.daily} /></span>
+            </article>
+          ))}
+        </div>
+      </section>
+      <section>
+        <div className="portfolioPanelHead"><h3>Portfolio</h3><button type="button">Tutti</button></div>
+        <div className="portfolioMiniSummary"><strong>{portfolioRows.length || 0} Totale</strong><span>Strumenti</span></div>
+        <div className="overviewList">
+          {(portfolioRows.length ? portfolioRows : customRows).map((item) => (
+            <article key={item.symbol}>
+              <span><strong>{item.symbol}</strong><small>{item.name}</small></span>
+              <MiniSparkline value={item.daily} />
+              <span><b>{item.price}</b><OverviewChange value={item.daily} /></span>
+            </article>
+          ))}
+          {!portfolioRows.length && !customRows.length && <p className="overviewEmptySide">Nessuna posizione registrata.</p>}
+        </div>
+      </section>
+    </aside>
+  );
+}
+
+function MarketsOverviewPage({ assets, transactions }) {
+  return (
+    <div className="marketsOverviewPage">
+      <DynamicMarketTickerStrip assets={assets} />
+      <div className="marketsOverviewLayout">
+        <div className="marketsOverviewMain">
+          <h1>Markets Overview</h1>
+          <DynamicWorldMarketsOverview assets={assets} />
+          <section className="overviewHeatmapSection">
+            <div className="overviewTitleRow">
+              <h2>Heatmap</h2>
+              <span>US market performance</span>
+            </div>
+            <TradingViewStockHeatmap />
+          </section>
+        </div>
+        <DynamicOverviewSidebar assets={assets} transactions={transactions} />
+      </div>
+    </div>
+  );
+}
+
 function loadCustomAssets() {
   try {
     const saved = JSON.parse(localStorage.getItem('wealth-custom-assets') || '[]');
@@ -1441,8 +1590,8 @@ function App() {
       </aside>
 
       <main>
-        <TradingViewTickerTape />
-        {page === 'macro' ? <MacroOverview theme={theme} setTheme={setTheme} assets={assets} /> : page === 'watchlist' ? (
+        {page !== 'markets' && <TradingViewTickerTape />}
+        {page === 'markets' ? <MarketsOverviewPage assets={assets} transactions={transactions} /> : page === 'macro' ? <MacroOverview theme={theme} setTheme={setTheme} assets={assets} /> : page === 'watchlist' ? (
           <WatchlistOverview theme={theme} setTheme={setTheme} favorites={favorites} toggleFavorite={toggleFavorite} assets={assets} pricesUpdatedAt={pricesUpdatedAt} addAsset={addAsset} removeAsset={removeAsset} />
         ) : page === 'news' ? (
           <NewsOverview theme={theme} setTheme={setTheme} />
