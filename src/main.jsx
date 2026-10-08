@@ -11,20 +11,17 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  CircleDollarSign,
   ExternalLink,
   Gauge,
   Globe2,
   Landmark,
   Moon,
-  MoreHorizontal,
   Newspaper,
   Plus,
   RefreshCw,
   Search,
   ShieldCheck,
   SlidersHorizontal,
-  Sparkles,
   Star,
   Sun,
   Trash2,
@@ -41,90 +38,38 @@ import {
 import './styles.css';
 
 const markets = [
-  { symbol: 'SPX', name: 'S&P 500', group: 'Indici', price: '5.421,03', daily: 0.42, monthly: 3.18, currency: 'USD', favorite: true },
-  { symbol: 'NDX', name: 'Nasdaq 100', group: 'Indici', price: '19.447,41', daily: 0.71, monthly: 5.62, currency: 'USD', favorite: true },
-  { symbol: 'SX5E', name: 'Euro Stoxx 50', group: 'Indici', price: '5.036,45', daily: -0.18, monthly: 1.24, currency: 'EUR', favorite: true },
-  { symbol: 'FTSEMIB', name: 'FTSE MIB', group: 'Indici', price: '34.742,12', daily: 0.23, monthly: 2.05, currency: 'EUR', favorite: false },
-  { symbol: 'MSCIWORLD', name: 'MSCI World ETF', group: 'Indici', price: '157,84', daily: 0.31, monthly: 2.14, currency: 'USD', favorite: false },
-  { symbol: 'EUR/USD', name: 'Euro / Dollaro', group: 'Valute', price: '1,0842', daily: -0.12, monthly: 0.88, currency: '', favorite: true },
-  { symbol: 'USD/JPY', name: 'Dollaro / Yen', group: 'Valute', price: '157,34', daily: 0.31, monthly: -1.42, currency: '', favorite: false },
-  { symbol: 'GOLD', name: 'Oro Spot', group: 'Materie prime', price: '2.326,80', daily: 0.54, monthly: 2.76, currency: 'USD', favorite: true },
-  { symbol: 'COPPER', name: 'Rame', group: 'Materie prime', price: '4,54', daily: 0.86, monthly: 4.32, currency: 'USD', favorite: false },
-  { symbol: 'BRENT', name: 'Petrolio Brent', group: 'Materie prime', price: '81,42', daily: 1.18, monthly: -2.41, currency: 'USD', favorite: false },
-  { symbol: 'BTC', name: 'Bitcoin', group: 'Crypto', price: '67.842,10', daily: -1.08, monthly: 8.91, currency: 'USD', favorite: false },
-  { symbol: 'VIX', name: 'Indice di volatilità VIX', group: 'Volatilità', price: '14,82', daily: -3.26, monthly: -8.74, currency: '', favorite: false },
-  { symbol: 'VVIX', name: 'Volatilità del VIX', group: 'Volatilità', price: '88,60', daily: -1.42, monthly: -5.18, currency: '', favorite: false },
-  { symbol: 'VSTOXX', name: 'Euro Stoxx 50 Volatility', group: 'Volatilità', price: '16,20', daily: -1.18, monthly: -6.32, currency: '', favorite: false },
-  { symbol: 'MOVE', name: 'MOVE Bond Volatility', group: 'Volatilità', price: '96,40', daily: -0.84, monthly: -4.18, currency: '', favorite: false },
-  { symbol: 'BTP10Y', name: 'BTP Italia 10 anni', group: 'Obbligazioni', price: '3,92', daily: -0.04, monthly: -0.18, currency: '%', favorite: false },
-  { symbol: 'BTP2Y', name: 'BTP Italia 2 anni', group: 'Obbligazioni', price: '3,41', daily: -0.03, monthly: -0.22, currency: '%', favorite: false },
-  { symbol: 'BUND10Y', name: 'Bund Germania 10 anni', group: 'Obbligazioni', price: '2,62', daily: -0.02, monthly: 0.09, currency: '%', favorite: false },
-  { symbol: 'UST10Y', name: 'Treasury USA 10 anni', group: 'Obbligazioni', price: '4,34', daily: 0.03, monthly: -0.12, currency: '%', favorite: false },
-  { symbol: 'UST2Y', name: 'Treasury USA 2 anni', group: 'Obbligazioni', price: '4,76', daily: 0.02, monthly: -0.08, currency: '%', favorite: false },
-  { symbol: 'UST30Y', name: 'Treasury USA 30 anni', group: 'Obbligazioni', price: '4,48', daily: 0.04, monthly: -0.06, currency: '%', favorite: false },
-  { symbol: 'BTP-BUND', name: 'Spread BTP / Bund', group: 'Credito e spread', price: '141', daily: -1.40, monthly: -5.37, currency: 'pb', favorite: false },
-  { symbol: 'USHY', name: 'Spread High Yield USA', group: 'Credito e spread', price: '318', daily: -0.62, monthly: -5.36, currency: 'pb', favorite: false },
-  { symbol: 'EUHY', name: 'Spread High Yield Europa', group: 'Credito e spread', price: '342', daily: -0.58, monthly: -3.12, currency: 'pb', favorite: false },
-  { symbol: 'DXY', name: 'Dollar Index', group: 'Valute', price: '104,72', daily: 0.16, monthly: 0.41, currency: '', favorite: false },
-  { symbol: 'GBP/USD', name: 'Sterlina / Dollaro', group: 'Valute', price: '1,2741', daily: -0.21, monthly: 1.12, currency: '$', favorite: false },
-  { symbol: 'SILVER', name: 'Argento Spot', group: 'Materie prime', price: '29,48', daily: 0.72, monthly: 6.83, currency: 'USD', favorite: false },
-  { symbol: 'WTI', name: 'Petrolio WTI', group: 'Materie prime', price: '77,91', daily: 1.02, monthly: -2.08, currency: 'USD', favorite: false },
-  { symbol: 'ETH', name: 'Ethereum', group: 'Crypto', price: '3.521,64', daily: -0.74, monthly: 11.28, currency: 'USD', favorite: false },
+  { symbol: 'SPX', name: 'S&P 500', group: 'Indici', price: 'N/D', daily: null, monthly: null, currency: 'USD', favorite: true },
+  { symbol: 'NDX', name: 'Nasdaq 100', group: 'Indici', price: 'N/D', daily: null, monthly: null, currency: 'USD', favorite: true },
+  { symbol: 'SX5E', name: 'Euro Stoxx 50', group: 'Indici', price: 'N/D', daily: null, monthly: null, currency: 'EUR', favorite: true },
+  { symbol: 'FTSEMIB', name: 'FTSE MIB', group: 'Indici', price: 'N/D', daily: null, monthly: null, currency: 'EUR', favorite: false },
+  { symbol: 'MSCIWORLD', name: 'MSCI World ETF', group: 'Indici', price: 'N/D', daily: null, monthly: null, currency: 'USD', favorite: false },
+  { symbol: 'EUR/USD', name: 'Euro / Dollaro', group: 'Valute', price: 'N/D', daily: null, monthly: null, currency: '', favorite: true },
+  { symbol: 'USD/JPY', name: 'Dollaro / Yen', group: 'Valute', price: 'N/D', daily: null, monthly: null, currency: '', favorite: false },
+  { symbol: 'GOLD', name: 'Oro Spot', group: 'Materie prime', price: 'N/D', daily: null, monthly: null, currency: 'USD', favorite: true },
+  { symbol: 'COPPER', name: 'Rame', group: 'Materie prime', price: 'N/D', daily: null, monthly: null, currency: 'USD', favorite: false },
+  { symbol: 'BRENT', name: 'Petrolio Brent', group: 'Materie prime', price: 'N/D', daily: null, monthly: null, currency: 'USD', favorite: false },
+  { symbol: 'BTC', name: 'Bitcoin', group: 'Crypto', price: 'N/D', daily: null, monthly: null, currency: 'USD', favorite: false },
+  { symbol: 'VIX', name: 'Indice di volatilita VIX', group: 'Volatilita', price: 'N/D', daily: null, monthly: null, currency: '', favorite: false },
+  { symbol: 'VVIX', name: 'Volatilita del VIX', group: 'Volatilita', price: 'N/D', daily: null, monthly: null, currency: '', favorite: false },
+  { symbol: 'VSTOXX', name: 'Euro Stoxx 50 Volatility', group: 'Volatilita', price: 'N/D', daily: null, monthly: null, currency: '', favorite: false },
+  { symbol: 'MOVE', name: 'MOVE Bond Volatility', group: 'Volatilita', price: 'N/D', daily: null, monthly: null, currency: '', favorite: false },
+  { symbol: 'BTP10Y', name: 'Titolo di Stato Italia 10 anni', group: 'Obbligazioni', price: 'N/D', daily: null, monthly: null, currency: '%', favorite: false },
+  { symbol: 'BTP2Y', name: 'BTP Italia 2 anni', group: 'Obbligazioni', price: 'N/D', daily: null, monthly: null, currency: '%', favorite: false },
+  { symbol: 'BUND10Y', name: 'Bund Germania 10 anni', group: 'Obbligazioni', price: 'N/D', daily: null, monthly: null, currency: '%', favorite: false },
+  { symbol: 'UST10Y', name: 'Treasury USA 10 anni', group: 'Obbligazioni', price: 'N/D', daily: null, monthly: null, currency: '%', favorite: false },
+  { symbol: 'UST2Y', name: 'Treasury USA 2 anni', group: 'Obbligazioni', price: 'N/D', daily: null, monthly: null, currency: '%', favorite: false },
+  { symbol: 'UST30Y', name: 'Treasury USA 30 anni', group: 'Obbligazioni', price: 'N/D', daily: null, monthly: null, currency: '%', favorite: false },
+  { symbol: 'BTP-BUND', name: 'Spread BTP / Bund', group: 'Credito e spread', price: 'N/D', daily: null, monthly: null, currency: 'pb', favorite: false },
+  { symbol: 'USHY', name: 'Spread High Yield USA', group: 'Credito e spread', price: 'N/D', daily: null, monthly: null, currency: 'pb', favorite: false },
+  { symbol: 'EUHY', name: 'Spread High Yield Europa', group: 'Credito e spread', price: 'N/D', daily: null, monthly: null, currency: 'pb', favorite: false },
+  { symbol: 'DXY', name: 'Dollar Index', group: 'Valute', price: 'N/D', daily: null, monthly: null, currency: '', favorite: false },
+  { symbol: 'GBP/USD', name: 'Sterlina / Dollaro', group: 'Valute', price: 'N/D', daily: null, monthly: null, currency: '$', favorite: false },
+  { symbol: 'SILVER', name: 'Argento Spot', group: 'Materie prime', price: 'N/D', daily: null, monthly: null, currency: 'USD', favorite: false },
+  { symbol: 'WTI', name: 'Petrolio WTI', group: 'Materie prime', price: 'N/D', daily: null, monthly: null, currency: 'USD', favorite: false },
+  { symbol: 'ETH', name: 'Ethereum', group: 'Crypto', price: 'N/D', daily: null, monthly: null, currency: 'USD', favorite: false },
 ];
 
-const chartData = [
-  { day: '13 Mag', value: 5185 }, { day: '16 Mag', value: 5222 }, { day: '20 Mag', value: 5308 },
-  { day: '23 Mag', value: 5267 }, { day: '27 Mag', value: 5314 }, { day: '30 Mag', value: 5278 },
-  { day: '3 Giu', value: 5335 }, { day: '6 Giu', value: 5372 }, { day: '10 Giu', value: 5391 },
-  { day: 'Oggi', value: 5421 },
-];
-
-const macro = [
-  { label: 'Tasso BCE', value: '4,25%', note: 'Prossima riunione 18 lug', tone: 'blue' },
-  { label: 'Fed Funds Rate', value: '5,50%', note: 'Invariato', tone: 'violet' },
-  { label: 'BTP 10 anni', value: '3,92%', note: '-4 pb oggi', tone: 'green' },
-  { label: 'Spread BTP-Bund', value: '141 pb', note: '-2 pb oggi', tone: 'orange' },
-];
-
-const commodities = [
-  { symbol: 'COPPER', name: 'Rame', price: '4,54', unit: 'USD / lb', daily: 0.86, monthly: 4.32, tone: 'copper' },
-  { symbol: 'BRENT', name: 'Petrolio Brent', price: '81,42', unit: 'USD / barile', daily: 1.18, monthly: -2.41, tone: 'oil' },
-];
-
-const macroRegions = {
-  Globale: {
-    regime: 'Reflazione moderata', summary: 'Crescita resiliente e pressioni energetiche contenute', tone: 'positive',
-    signals: [
-      { title: 'Ciclo industriale globale', priority: 'Alta', status: 'Reflazione', tone: 'positive', left: ['Rame', '+4,32% 1M'], right: ['Brent', '-2,41% 1M'], reading: 'Il rame forte con petrolio più debole suggerisce domanda industriale solida senza uno shock energetico.' },
-      { title: 'Inflazione importata', priority: 'Alta', status: 'Pressione moderata', tone: 'neutral', left: ['Materie prime', '+1,7% 1M'], right: ['Dollaro USA', '+0,4% 1M'], reading: 'Commodity e dollaro entrambi in lieve rialzo aumentano marginalmente la pressione sui paesi importatori.' },
-      { title: 'Domanda difensiva', priority: 'Alta', status: 'Difesa contenuta', tone: 'positive', left: ['Oro', '+2,76% 1M'], right: ['Rame', '+4,32% 1M'], reading: 'Il rame sovraperforma l’oro: il segnale relativo favorisce crescita industriale rispetto alla pura difesa.' },
-      { title: 'Liquidità globale', priority: 'Media', status: 'Neutrale', tone: 'neutral', left: ['Dollaro DXY', '+0,4% 1M'], right: ['Bitcoin', '+8,91% 1M'], reading: 'Il dollaro stabile e gli asset sensibili alla liquidità forti non indicano una stretta globale marcata.' },
-      { title: 'Commercio mondiale', priority: 'Media', status: 'Espansione lieve', tone: 'positive', left: ['Baltic Dry', '+3,6% 1M'], right: ['Rame', '+4,32% 1M'], reading: 'Trasporti marittimi e rame in rialzo suggeriscono un miglioramento graduale della domanda globale.' },
-    ],
-  },
-  'Stati Uniti': {
-    regime: 'Espansione tardiva', summary: 'Crescita resiliente con tassi reali ancora restrittivi', tone: 'neutral',
-    signals: [
-      { title: 'Rischio recessione USA', priority: 'Alta', status: 'Attenzione moderata', tone: 'warning', left: ['Curva 10Y–3M', '-0,72%'], right: ['Spread High Yield', '3,18%'], reading: 'La curva resta invertita, ma gli spread creditizi contenuti non confermano stress recessivo imminente.' },
-      { title: 'Stress finanziario USA', priority: 'Alta', status: 'Stress contenuto', tone: 'positive', left: ['VIX', '14,8'], right: ['Spread High Yield', '3,18%'], reading: 'Volatilità e premio per il rischio creditizio restano bassi: il mercato non segnala tensioni sistemiche.' },
-      { title: 'Origine del rialzo tassi', priority: 'Alta', status: 'Tassi reali elevati', tone: 'neutral', left: ['Treasury 10Y', '4,34%'], right: ['Breakeven 10Y', '2,29%'], reading: 'Rendimenti nominali elevati con aspettative d’inflazione stabili indicano soprattutto tassi reali più restrittivi.' },
-      { title: 'Azioni e credito USA', priority: 'Alta', status: 'Risk-on confermato', tone: 'positive', left: ['S&P 500', '+3,18% 1M'], right: ['Spread High Yield', '-18 pb 1M'], reading: 'Azioni in rialzo e spread in calo descrivono condizioni finanziarie favorevoli e un risk-on coerente.' },
-      { title: 'Ampiezza della crescita', priority: 'Media', status: 'Mercato concentrato', tone: 'warning', left: ['Russell 2000', '+0,8% 1M'], right: ['S&P 500', '+3,18% 1M'], reading: 'Le large cap sovraperformano le small cap: la forza del mercato non è ancora pienamente diffusa.' },
-      { title: 'Oro e tassi reali USA', priority: 'Media', status: 'Divergenza difensiva', tone: 'warning', left: ['Oro', '+2,76% 1M'], right: ['Tasso reale 10Y', '2,05%'], reading: 'Oro e rendimenti reali entrambi forti possono riflettere domanda difensiva, rischio geopolitico o fiscale.' },
-    ],
-  },
-  Europa: {
-    regime: 'Ripresa fragile', summary: 'Disinflazione favorevole, crescita ancora poco diffusa', tone: 'warning',
-    signals: [
-      { title: 'Ciclo Eurozona', priority: 'Alta', status: 'Ripresa fragile', tone: 'warning', left: ['Euro Stoxx 50', '+1,24% 1M'], right: ['Spread HY EUR', '3,42%'], reading: 'Azioni positive e credito stabile indicano una ripresa ordinata, ma non ancora particolarmente robusta.' },
-      { title: 'Curva e crescita europea', priority: 'Alta', status: 'Normalizzazione', tone: 'neutral', left: ['Bund 10Y–2Y', '+0,18%'], right: ['PMI composito', '51,2'], reading: 'La curva torna lievemente positiva e il PMI sopra 50 suggerisce crescita contenuta ma non recessiva.' },
-      { title: 'Inflazione Eurozona', priority: 'Alta', status: 'Disinflazione', tone: 'positive', left: ['Bund 10Y', '2,62%'], right: ['Inflazione swap 5Y5Y', '2,31%'], reading: 'Le aspettative di inflazione restano vicine all’obiettivo, favorendo una graduale normalizzazione monetaria.' },
-      { title: 'Rischio periferico', priority: 'Alta', status: 'Contenuto', tone: 'positive', left: ['Spread BTP–Bund', '141 pb'], right: ['Euro Stoxx Banks', '+2,1% 1M'], reading: 'Spread periferico stabile e banche forti non segnalano tensioni rilevanti sulla frammentazione finanziaria.' },
-      { title: 'Euro e competitività', priority: 'Media', status: 'Supporto moderato', tone: 'positive', left: ['EUR/USD', '-0,12% oggi'], right: ['DAX', '+1,7% 1M'], reading: 'Un euro non troppo forte può sostenere gli esportatori, mentre il DAX positivo conferma una domanda estera discreta.' },
-      { title: 'Banche e curva Bund', priority: 'Media', status: 'Reflazione lieve', tone: 'neutral', left: ['Euro Stoxx Banks', '+2,1% 1M'], right: ['Curva Bund', '+18 pb'], reading: 'Banche e curva più ripida suggeriscono una modesta normalizzazione ciclica, ancora da confermare.' },
-    ],
-  },
-};
+const macroRegions = { Globale: {}, 'Stati Uniti': {}, Europa: {} };
 
 const italyInflationFallback = {
   items: [
@@ -139,76 +84,51 @@ const italyInflationFallback = {
   },
 };
 
-const financialNews = [
-  {
-    category: 'Banche centrali',
-    title: 'La BCE alza i tassi di 25 punti base',
-    summary: 'La banca centrale reagisce alle nuove pressioni inflazionistiche legate all’energia, mentre rivede al ribasso le prospettive di crescita dell’Eurozona.',
-    source: 'The Guardian',
-    time: '13:45',
-    url: 'https://www.theguardian.com/business/live/2026/jun/11/ryanair-investigation-seating-children-eurozone-interest-rates-middle-east-oil-uk-housing-live-news-updates',
-    tone: 'blue',
-    featured: true,
-  },
-  {
-    category: 'Mercati',
-    title: 'Wall Street verso il rimbalzo dopo la pressione sui titoli AI',
-    summary: 'I future statunitensi indicano un’apertura positiva, mentre petrolio e rendimenti restano al centro dell’attenzione degli investitori.',
-    source: 'Associated Press',
-    time: '12:20',
-    url: 'https://apnews.com/article/87c831451197beedb3e29771de1e0a92',
-    tone: 'green',
-  },
-  {
-    category: 'Dati macro',
-    title: 'Mercati in attesa del PPI statunitense di maggio',
-    summary: 'Il dato sui prezzi alla produzione è atteso in rialzo dello 0,7%, dopo l’incremento dell’1,4% registrato ad aprile.',
-    source: 'Investopedia',
-    time: '11:05',
-    url: 'https://www.investopedia.com/5-things-to-know-before-the-stock-market-opens-june-11-2026-11995534',
-    tone: 'orange',
-  },
-  {
-    category: 'Valute',
-    title: 'Il ruolo internazionale dell’euro cresce moderatamente',
-    summary: 'La quota dell’euro negli indicatori globali di utilizzo valutario raggiunge circa il 20%, confermandolo come seconda valuta internazionale.',
-    source: 'Banca Centrale Europea',
-    time: '10:30',
-    url: 'https://www.ecb.europa.eu/press/other-publications/ire/html/ecb.ire202606.en.html',
-    tone: 'violet',
-  },
-  {
-    category: 'Obbligazioni',
-    title: 'Oggi la pubblicazione dei Financial Accounts degli Stati Uniti',
-    summary: 'La Federal Reserve aggiorna i conti finanziari USA, una fotografia dei flussi e dei bilanci di famiglie, imprese e settore pubblico.',
-    source: 'Federal Reserve',
-    time: '09:40',
-    url: 'https://www.federalreserve.gov/releases/z1/',
-    tone: 'cyan',
-  },
-  {
-    category: 'Agenda',
-    title: 'Jobless claims e inflazione alla produzione guidano la seduta USA',
-    summary: 'Le richieste iniziali di sussidio e il PPI sono i principali appuntamenti macroeconomici della giornata americana.',
-    source: 'MarketWatch',
-    time: '08:30',
-    url: 'https://www.marketwatch.com/economy-politics/calendar',
-    tone: 'red',
-  },
-];
+const financialNews = [];
 
-const formatChange = (value) => `${value > 0 ? '+' : ''}${value.toLocaleString('it-IT', { minimumFractionDigits: 2 })}%`;
+const formatChange = (value) => Number.isFinite(value)
+  ? `${value > 0 ? '+' : ''}${value.toLocaleString('it-IT', { minimumFractionDigits: 2 })}%`
+  : 'N/D';
 
-const formatLivePrice = (value, currency) => Number(value).toLocaleString('it-IT', {
-  minimumFractionDigits: currency === 'pb' ? 0 : 2,
-  maximumFractionDigits: currency === 'pb' ? 0 : 4,
-});
+const formatLivePrice = (value, currency) => {
+  if (value == null || value === '') return 'N/D';
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return 'N/D';
+  return numeric.toLocaleString('it-IT', {
+    minimumFractionDigits: currency === 'pb' ? 0 : 2,
+    maximumFractionDigits: currency === 'pb' ? 0 : numeric >= 10 ? 2 : 4,
+  });
+};
 
 const formatUpdateTime = (value) => value
-  ? new Intl.DateTimeFormat('it-IT', { hour: '2-digit', minute: '2-digit' }).format(new Date(value))
+  ? new Intl.DateTimeFormat('it-IT', { timeZone: 'Europe/Rome', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(value))
   : null;
 
-const parseItalianNumber = (value) => Number(String(value).replaceAll('.', '').replace(',', '.'));
+const formatQuoteTime = (value) => {
+  if (!value) return null;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return new Intl.DateTimeFormat('it-IT', { timeZone: 'UTC', day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(`${value}T00:00:00Z`));
+  }
+  return formatUpdateTime(value);
+};
+
+const todayLabel = () => new Intl.DateTimeFormat('it-IT', {
+  timeZone: 'Europe/Rome', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+}).format(new Date());
+
+function useTodayLabel() {
+  const [today, setToday] = useState(todayLabel);
+  useEffect(() => {
+    const interval = setInterval(() => setToday(todayLabel()), 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+  return today;
+}
+
+const parseItalianNumber = (value) => {
+  const parsed = Number(String(value).replaceAll('.', '').replace(',', '.'));
+  return Number.isFinite(parsed) ? parsed : 0;
+};
 
 const regionalRiskConfig = {
   Globale: { symbols: ['MSCIWORLD', 'VIX', 'MOVE'], title: 'MSCI World vs VIX e MOVE', description: 'Azioni globali, volatilità azionaria USA e volatilità del mercato obbligazionario.', note: 'VIX misura lo stress azionario; MOVE misura la volatilità implicita dei Treasury USA.' },
@@ -221,6 +141,9 @@ function regionalRiskView(assets, region) {
   const [equity, riskOne, riskTwo] = config.symbols.map((symbol) => assets.find((item) => item.symbol === symbol));
   const riskOneLevel = parseItalianNumber(riskOne?.price);
   const riskTwoLevel = parseItalianNumber(riskTwo?.price);
+  if (![equity, riskOne, riskTwo].every((item) => item?.price !== 'N/D' && Number.isFinite(item?.monthly))) {
+    return { tone: 'neutral', label: 'Dati insufficienti', text: 'Almeno una delle serie necessarie non è disponibile. Il regime di rischio non può essere calcolato.' };
+  }
   const elevated = region === 'Stati Uniti'
     ? riskOneLevel >= 25 || riskTwoLevel >= 120
     : region === 'Europa'
@@ -235,7 +158,82 @@ function regionalRiskView(assets, region) {
   return { tone: 'neutral', label: 'Segnale misto', text: 'Le variazioni a un mese non forniscono ancora una conferma direzionale robusta.' };
 }
 
+function assetDisplay(asset, field = 'monthly') {
+  if (!asset) return 'N/D';
+  if (field === 'price') return asset.price || 'N/D';
+  return formatChange(asset[field]);
+}
+
+function dynamicTone(value, inverse = false) {
+  if (!Number.isFinite(value)) return 'neutral';
+  const adjusted = inverse ? -value : value;
+  if (adjusted > 0.15) return 'positive';
+  if (adjusted < -0.15) return 'warning';
+  return 'neutral';
+}
+
+function signalStatus(tone) {
+  if (tone === 'positive') return 'Costruttivo';
+  if (tone === 'warning') return 'Da monitorare';
+  return 'Neutrale';
+}
+
+function makeDynamicSignal({ assets, title, priority, leftSymbol, rightSymbol, leftField = 'monthly', rightField = 'monthly', inverseLeft = false, inverseRight = false, reading }) {
+  const left = assets.find((item) => item.symbol === leftSymbol);
+  const right = assets.find((item) => item.symbol === rightSymbol);
+  if (!Number.isFinite(left?.[leftField]) || !Number.isFinite(right?.[rightField])) {
+    return { title, priority, status: 'N/D', tone: 'neutral', available: false, left: [left?.name || leftSymbol, 'N/D'], right: [right?.name || rightSymbol, 'N/D'], reading: 'Dati insufficienti per calcolare questo segnale.' };
+  }
+  const leftTone = dynamicTone(left?.[leftField], inverseLeft);
+  const rightTone = dynamicTone(right?.[rightField], inverseRight);
+  const tone = leftTone === 'warning' || rightTone === 'warning' ? 'warning' : leftTone === 'positive' || rightTone === 'positive' ? 'positive' : 'neutral';
+  return {
+    title,
+    priority,
+    status: signalStatus(tone),
+    tone,
+    left: [left?.name || leftSymbol, assetDisplay(left, leftField)],
+    right: [right?.name || rightSymbol, assetDisplay(right, rightField)],
+    reading: reading(left, right),
+  };
+}
+
+function marketRegimeFromSignals(region, signals) {
+  const availableSignals = signals.filter((signal) => signal.available !== false);
+  if (availableSignals.length < 2) return { regime: 'Dati insufficienti', summary: `${availableSignals.length}/${signals.length} segnali calcolabili per ${region}: servono almeno due segnali per descrivere un regime.`, tone: 'neutral' };
+  const positiveCount = availableSignals.filter((signal) => signal.tone === 'positive').length;
+  const warningCount = availableSignals.filter((signal) => signal.tone === 'warning').length;
+  const tone = warningCount > positiveCount ? 'warning' : positiveCount > warningCount ? 'positive' : 'neutral';
+  const regime = tone === 'positive' ? 'Risk-on dinamico' : tone === 'warning' ? 'Rischio in aumento' : 'Quadro misto';
+  const summary = `${availableSignals.length}/${signals.length} segnali calcolabili: ${positiveCount} costruttivi, ${warningCount} da monitorare. Lettura basata sugli ultimi dati disponibili per ${region}.`;
+  return { regime, summary, tone };
+}
+
+function buildMacroRegionView(assets, region) {
+  const shared = { assets };
+  const signalsByRegion = {
+    Globale: [
+      makeDynamicSignal({ ...shared, title: 'Ciclo industriale globale', priority: 'Alta', leftSymbol: 'COPPER', rightSymbol: 'BRENT', reading: (left, right) => `Rame ${overviewMoveLabel(left?.monthly)} e Brent ${overviewMoveLabel(right?.monthly)} nell'ultimo mese: la combinazione misura domanda industriale e pressione energetica.` }),
+      makeDynamicSignal({ ...shared, title: 'Domanda difensiva', priority: 'Alta', leftSymbol: 'GOLD', rightSymbol: 'COPPER', reading: (left, right) => `Oro ${overviewMoveLabel(left?.monthly)} contro rame ${overviewMoveLabel(right?.monthly)}: il rapporto aiuta a distinguere difesa da ciclo industriale.` }),
+      makeDynamicSignal({ ...shared, title: 'Liquidita globale', priority: 'Media', leftSymbol: 'DXY', rightSymbol: 'BTC', inverseLeft: true, reading: (left, right) => `Dollaro ${overviewMoveLabel(left?.monthly)} e Bitcoin ${overviewMoveLabel(right?.monthly)}: segnale dinamico sulle condizioni di liquidita globale.` }),
+    ],
+    'Stati Uniti': [
+      makeDynamicSignal({ ...shared, title: 'Azioni USA e volatilita', priority: 'Alta', leftSymbol: 'SPX', rightSymbol: 'VIX', inverseRight: true, reading: (left, right) => `S&P 500 ${overviewMoveLabel(left?.monthly)} e VIX ${overviewMoveLabel(right?.monthly)}: combinazione usata per leggere risk-on/risk-off USA.` }),
+      makeDynamicSignal({ ...shared, title: 'Tech e stress implicito', priority: 'Alta', leftSymbol: 'NDX', rightSymbol: 'VVIX', inverseRight: true, reading: (left, right) => `Nasdaq 100 ${overviewMoveLabel(left?.monthly)} e VVIX ${overviewMoveLabel(right?.monthly)}: segnala quanto il rialzo tech sia accompagnato da stress sulla volatilita.` }),
+      makeDynamicSignal({ ...shared, title: 'Curva Treasury', priority: 'Media', leftSymbol: 'UST10Y', rightSymbol: 'UST2Y', reading: (left, right) => `Treasury 10 anni ${overviewMoveLabel(left?.monthly)} e 2 anni ${overviewMoveLabel(right?.monthly)}: lettura dinamica della pressione sui tassi USA.` }),
+    ],
+    Europa: [
+      makeDynamicSignal({ ...shared, title: 'Azioni e credito europeo', priority: 'Alta', leftSymbol: 'SX5E', rightSymbol: 'EUHY', inverseRight: true, reading: (left, right) => `Euro Stoxx 50 ${overviewMoveLabel(left?.monthly)} e credito HY Europa ${overviewMoveLabel(right?.monthly)}: conferma o nega il risk-on europeo.` }),
+      makeDynamicSignal({ ...shared, title: 'Rischio periferico', priority: 'Alta', leftSymbol: 'BTP-BUND', rightSymbol: 'SX5E', inverseLeft: true, reading: (left, right) => `Spread BTP-Bund ${overviewMoveLabel(left?.monthly)} e azionario europeo ${overviewMoveLabel(right?.monthly)}: misura dinamica della frammentazione finanziaria.` }),
+      makeDynamicSignal({ ...shared, title: 'Euro e competitivita', priority: 'Media', leftSymbol: 'EUR/USD', rightSymbol: 'SX5E', reading: (left, right) => `EUR/USD ${overviewMoveLabel(left?.monthly)} e Euro Stoxx 50 ${overviewMoveLabel(right?.monthly)}: lettura dinamica tra valuta e azionario europeo.` }),
+    ],
+  };
+  const signals = signalsByRegion[region] || signalsByRegion.Globale;
+  return { ...marketRegimeFromSignals(region, signals), signals };
+}
+
 const currencySymbol = (item) => {
+  if (['SPX', 'NDX', 'SX5E', 'FTSEMIB', 'VIX', 'VVIX', 'VSTOXX', 'MOVE', 'DXY'].includes(item.symbol)) return '';
   if (item.currency === 'EUR') return '€';
   if (item.currency === 'USD' || item.currency === '$' || item.symbol === 'EUR/USD') return '$';
   if (item.symbol === 'USD/JPY') return '¥';
@@ -243,14 +241,6 @@ const currencySymbol = (item) => {
 };
 
 const isSuffixUnit = (item) => item.currency === '%' || item.currency === 'pb';
-
-function commodityComment(copper, oil) {
-  if (copper.monthly > 1 && oil.monthly <= 1) return 'Segnale prevalentemente reflazionistico: il rame forte suggerisce domanda industriale e crescita, senza una pressione energetica equivalente.';
-  if (oil.monthly > 1 && copper.monthly < 0) return 'Possibile segnale stagflazionistico: energia in rialzo e rame debole possono indicare più inflazione insieme a una crescita meno robusta.';
-  if (oil.monthly > 1 && copper.monthly > 1) return 'Pressioni inflazionistiche diffuse, ma con domanda industriale ancora solida: quadro più vicino alla reflazione che alla stagflazione.';
-  if (oil.monthly < 0 && copper.monthly < 0) return 'Segnale di raffreddamento ciclico: energia e metalli industriali deboli suggeriscono minori pressioni su crescita e inflazione.';
-  return 'Quadro misto: osservare insieme domanda industriale, prezzi energetici e indicatori di crescita prima di identificare il regime macro.';
-}
 
 function TradingViewTickerTape() {
   const [ready, setReady] = useState(() => Boolean(customElements.get('tv-ticker-tape')));
@@ -395,6 +385,7 @@ function TradingViewStockHeatmap() {
 }
 
 function Change({ value }) {
+  if (!Number.isFinite(value)) return <span className="change neutral">N/D</span>;
   const positive = value >= 0;
   const Icon = positive ? ArrowUpRight : ArrowDownRight;
   return <span className={`change ${positive ? 'up' : 'down'}`}><Icon size={14} />{formatChange(value)}</span>;
@@ -412,9 +403,9 @@ function HeaderActions({ theme, setTheme, showSearch = false, query = '', setQue
 
 function MacroOverview({ theme, setTheme, assets }) {
   const [region, setRegion] = useState('Globale');
-  const current = macroRegions[region];
+  const current = buildMacroRegionView(assets, region);
   const positiveCount = current.signals.filter((signal) => signal.tone === 'positive').length;
-  const neutralCount = current.signals.filter((signal) => signal.tone === 'neutral').length;
+  const neutralCount = current.signals.filter((signal) => signal.tone === 'neutral' && signal.available !== false).length;
   const warningCount = current.signals.filter((signal) => signal.tone === 'warning').length;
   const riskConfig = regionalRiskConfig[region];
   const riskAssets = riskConfig.symbols.map((symbol) => assets.find((item) => item.symbol === symbol));
@@ -431,7 +422,7 @@ function MacroOverview({ theme, setTheme, assets }) {
         <HeaderActions theme={theme} setTheme={setTheme} />
       </header>
 
-      <div className="demoNotice"><BrainCircuit size={15} /><span>Analisi dimostrativa basata su segnali intermarket</span><b>8 segnali monitorati</b></div>
+      <div className="demoNotice"><BrainCircuit size={15} /><span>Analisi calcolata dai valori disponibili</span><b>{current.signals.filter((signal) => signal.available !== false).length}/{current.signals.length} segnali calcolabili</b></div>
 
       <div className="regionTabs" role="tablist" aria-label="Area geografica">
         {Object.keys(macroRegions).map((item) => <button type="button" role="tab" aria-selected={region === item} className={region === item ? 'active' : ''} onClick={() => setRegion(item)} key={item}>{item}</button>)}
@@ -456,7 +447,7 @@ function MacroOverview({ theme, setTheme, assets }) {
             <article className="card volatilityMetric" key={item.symbol}>
               <span>{item.name}</span>
               <strong>{item.price}</strong>
-              <div><span>Oggi</span><Change value={item.daily} /><span>1 mese</span><Change value={item.monthly} /></div>
+              <div><span>1 giorno</span><Change value={item.daily} /><span>1 mese</span><Change value={item.monthly} /></div>
               {item.source && <small>{item.source}</small>}
             </article>
           ))}
@@ -471,7 +462,7 @@ function MacroOverview({ theme, setTheme, assets }) {
 
       {region === 'Europa' && <ItalyInflationFocus />}
 
-      <section className="sectionHeading macroSignalsHeading"><div><h2>Segnali ad alta priorità</h2><p>Indicatori con maggiore utilità per leggere ciclo, inflazione e stress finanziario.</p></div><span className="updated">Dati dimostrativi</span></section>
+      <section className="sectionHeading macroSignalsHeading"><div><h2>Segnali ad alta priorità</h2><p>Indicatori con maggiore utilità per leggere ciclo, inflazione e stress finanziario.</p></div><span className="updated">Dati live</span></section>
       <section className="signalGrid">
         {current.signals.filter((signal) => signal.priority === 'Alta').map((signal) => <MacroSignalCard signal={signal} key={signal.title} />)}
       </section>
@@ -521,7 +512,7 @@ function ItalyInflationFocus() {
     <>
       <section className="sectionHeading macroSignalsHeading">
         <div><h2>Focus Italia: inflazione</h2><p>Inflazione osservata, scenario atteso e stima di mercato tramite breakeven su BTP.</p></div>
-        <span className="updated">{loading ? 'Aggiornamento...' : updatedAt ? `Aggiornato alle ${updatedAt}` : 'Italia'}</span>
+        <span className="updated">{loading ? 'Aggiornamento...' : updatedAt ? `Fonti verificate il ${updatedAt}` : 'Italia'}</span>
       </section>
       {error && <div className="refreshError">Focus Italia non aggiornato: {error}</div>}
       <section className="italyInflationPanel">
@@ -531,7 +522,7 @@ function ItalyInflationFocus() {
               <span>{item.label}</span>
               <strong>{Number.isFinite(item.value) ? `${formatPortfolioNumber(item.value)}%` : 'N/D'}</strong>
               <small>{item.note}</small>
-              <a href={item.url} target="_blank" rel="noreferrer">{item.source}<ExternalLink size={12} /></a>
+              {item.url ? <a href={item.url} target="_blank" rel="noreferrer">{item.source}<ExternalLink size={12} /></a> : <small>{item.source}</small>}
             </article>
           ))}
         </div>
@@ -560,7 +551,7 @@ function MacroSignalCard({ signal }) {
   );
 }
 
-function WatchlistOverview({ theme, setTheme, favorites, toggleFavorite, assets, pricesUpdatedAt, addAsset, removeAsset }) {
+function WatchlistOverview({ theme, setTheme, favorites, toggleFavorite, assets, pricesUpdatedAt, pricesError, addAsset, removeAsset }) {
   const [query, setQuery] = useState('');
   const [assetQuery, setAssetQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -568,6 +559,7 @@ function WatchlistOverview({ theme, setTheme, favorites, toggleFavorite, assets,
   const [addError, setAddError] = useState('');
   const assetClasses = [...new Set(assets.map((item) => item.group))];
   const visibleAssets = assets.filter((item) => `${item.symbol} ${item.name} ${item.group}`.toLowerCase().includes(query.toLowerCase()));
+  const availableCount = assets.filter((item) => item.price !== 'N/D').length;
 
   useEffect(() => {
     if (assetQuery.trim().length < 2) {
@@ -606,7 +598,7 @@ function WatchlistOverview({ theme, setTheme, favorites, toggleFavorite, assets,
         <HeaderActions theme={theme} setTheme={setTheme} showSearch query={query} setQuery={setQuery} />
       </header>
 
-      <div className="demoNotice"><Star size={15} /><span>Asset organizzati per classe</span><b>{pricesUpdatedAt ? `Prezzi aggiornati alle ${formatUpdateTime(pricesUpdatedAt)}` : `${visibleAssets.length} strumenti monitorati`}</b></div>
+      <div className="demoNotice"><Star size={15} /><span>{availableCount}/{assets.length} quotazioni disponibili</span><b>{pricesError || (pricesUpdatedAt ? `API verificata il ${formatUpdateTime(pricesUpdatedAt)}` : 'Caricamento dati in corso')}</b></div>
 
       <section className="card assetSearchPanel">
         <div className="assetSearchIntro"><div><h2>Aggiungi un nuovo asset</h2><p>Cerca azioni, ETF, indici, valute, crypto e materie prime.</p></div></div>
@@ -655,13 +647,13 @@ function WatchlistOverview({ theme, setTheme, favorites, toggleFavorite, assets,
                   <div className="assetPrice">
                     {!isSuffixUnit(item) && <span>{currencySymbol(item)}</span>}
                     <strong>{item.price}</strong>
-                    {isSuffixUnit(item) && <span>{item.currency}</span>}
+                    {isSuffixUnit(item) && item.price !== 'N/D' && <span>{item.currency}</span>}
                   </div>
                   <div className="assetPerformance">
-                    <div><span>Oggi</span><Change value={item.daily} /></div>
+                    <div><span>1 giorno</span><Change value={item.daily} /></div>
                     <div><span>1 mese</span><Change value={item.monthly} /></div>
                   </div>
-                  {item.source && <span className="assetSource">{item.source}</span>}
+                  <span className="assetSource">{item.source ? `${item.source}${item.asOf ? ` · Rilevato: ${formatQuoteTime(item.asOf)}` : ''}` : 'Quotazione non disponibile'}</span>
                 </article>
               ))}
             </div>
@@ -678,25 +670,31 @@ function NewsOverview({ theme, setTheme }) {
   const [updatedAt, setUpdatedAt] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const [refreshError, setRefreshError] = useState('');
-  const today = new Intl.DateTimeFormat('it-IT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date());
+  const today = useTodayLabel();
   const featured = news[0];
   const latestNews = news.slice(1);
 
   useEffect(() => {
     fetch('/api/news')
-      .then((response) => response.json())
+      .then(async (response) => {
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.details || data.error || 'News non disponibili');
+        return data;
+      })
       .then((data) => {
         if (data.articles?.length) {
           setNews(data.articles.map((article, index) => ({
             ...article,
             category: index === 0 ? 'Notizia finanziaria del giorno' : 'Economia e mercati',
-            time: new Intl.DateTimeFormat('it-IT', { hour: '2-digit', minute: '2-digit' }).format(new Date(article.publishedAt)),
+            time: formatUpdateTime(article.publishedAt),
             tone: index === 0 ? 'blue' : ['green', 'orange', 'violet', 'cyan', 'red'][index % 5],
           })));
           setUpdatedAt(data.updatedAt);
+        } else {
+          setRefreshError('Nessuna news live disponibile.');
         }
       })
-      .catch(() => {});
+      .catch((error) => setRefreshError(error.message));
   }, []);
 
   async function refreshNews() {
@@ -706,10 +704,11 @@ function NewsOverview({ theme, setTheme }) {
       const response = await fetch('/api/news/refresh', { method: 'POST' });
       const data = await response.json();
       if (!response.ok) throw new Error(data.details || data.error);
+      if (!data.articles?.length) throw new Error('Nessuna news live disponibile.');
       setNews(data.articles.map((article, index) => ({
         ...article,
         category: index === 0 ? 'Notizia finanziaria del giorno' : 'Economia e mercati',
-        time: new Intl.DateTimeFormat('it-IT', { hour: '2-digit', minute: '2-digit' }).format(new Date(article.publishedAt)),
+        time: formatUpdateTime(article.publishedAt),
         tone: index === 0 ? 'blue' : ['green', 'orange', 'violet', 'cyan', 'red'][index % 5],
       })));
       setUpdatedAt(data.updatedAt);
@@ -732,12 +731,12 @@ function NewsOverview({ theme, setTheme }) {
       </header>
 
       <div className="newsToolbar">
-        <div className="demoNotice"><Newspaper size={15} /><span>Principali notizie della giornata</span><b>{updatedAt ? `Aggiornate alle ${formatUpdateTime(updatedAt)}` : 'Dati iniziali'}</b></div>
+        <div className="demoNotice"><Newspaper size={15} /><span>Ultime notizie disponibili</span><b>{updatedAt ? `Feed verificato il ${formatUpdateTime(updatedAt)}` : 'In attesa di dati live'}</b></div>
         <button className="refreshButton" type="button" onClick={refreshNews} disabled={refreshing}><RefreshCw size={15} className={refreshing ? 'spinning' : ''} />{refreshing ? 'Aggiornamento...' : 'Aggiorna news'}</button>
       </div>
       {refreshError && <div className="refreshError">{refreshError}</div>}
 
-      <a className="newsFeatured" href={featured.url} target="_blank" rel="noopener noreferrer">
+      {featured ? <a className="newsFeatured" href={featured.url} target="_blank" rel="noopener noreferrer">
         <div className="newsFeaturedContent">
           <div className="newsMeta"><span className={`newsCategory ${featured.tone}`}>{featured.category}</span><span>{featured.time}</span></div>
           <h2>{featured.title}</h2>
@@ -745,7 +744,7 @@ function NewsOverview({ theme, setTheme }) {
           <div className="newsSource"><span>{featured.source}</span><span>Leggi la notizia <ExternalLink size={14} /></span></div>
         </div>
         <div className="newsFeaturedVisual"><Landmark size={42} /><span>Focus del giorno</span></div>
-      </a>
+      </a> : <div className="card empty">Nessuna news live caricata. Usa “Aggiorna news” o verifica la configurazione dell'API.</div>}
 
       <section className="sectionHeading newsHeading"><div><h2>Ultime notizie</h2><p>Mercati, macroeconomia e politica monetaria.</p></div><span className="updated">{news.length} aggiornamenti</span></section>
       <section className="newsGrid">
@@ -763,12 +762,14 @@ function NewsOverview({ theme, setTheme }) {
   );
 }
 
-const formatPortfolioNumber = (value) => Number(value || 0).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const formatPortfolioNumber = (value) => value == null || !Number.isFinite(Number(value))
+  ? 'N/D'
+  : Number(value).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 function PortfolioOverview({ theme, setTheme, assets, transactions, addTransaction, removeTransaction, pricesUpdatedAt }) {
   const [form, setForm] = useState({ type: 'buy', mode: 'quantity', symbol: assets[0]?.symbol || '', quantity: '', amount: '', price: '', fees: '0', date: new Date().toISOString().slice(0, 10) });
   const selectedAsset = assets.find((item) => item.symbol === form.symbol);
-  const currentAssetPrice = parseItalianNumber(selectedAsset?.price || 0);
+  const currentAssetPrice = selectedAsset?.price && selectedAsset.price !== 'N/D' ? parseItalianNumber(selectedAsset.price) : null;
   const calculatedQuantity = form.mode === 'amount' && Number(form.price) > 0 ? Number(form.amount) / Number(form.price) : Number(form.quantity);
   const calculatedAmount = form.mode === 'quantity' ? Number(form.quantity) * Number(form.price) : Number(form.amount);
 
@@ -794,17 +795,18 @@ function PortfolioOverview({ theme, setTheme, assets, transactions, addTransacti
 
     return [...bySymbol.values()].filter((position) => position.quantity > 0.000001).map((position) => {
       const asset = assets.find((item) => item.symbol === position.symbol);
-      const currentPrice = parseItalianNumber(asset?.price || 0);
-      const value = position.quantity * currentPrice;
-      const unrealized = value - position.cost;
-      return { ...position, asset, currentPrice, value, unrealized, returnPct: position.cost ? (unrealized / position.cost) * 100 : 0 };
-    }).sort((a, b) => b.value - a.value);
+      const currentPrice = asset?.price && asset.price !== 'N/D' ? parseItalianNumber(asset.price) : null;
+      const value = currentPrice == null ? null : position.quantity * currentPrice;
+      const unrealized = value == null ? null : value - position.cost;
+      return { ...position, asset, currentPrice, value, unrealized, returnPct: unrealized == null ? null : position.cost ? (unrealized / position.cost) * 100 : 0 };
+    }).sort((a, b) => (b.value ?? -1) - (a.value ?? -1));
   }, [assets, transactions]);
 
-  const totalValue = positions.reduce((sum, position) => sum + position.value, 0);
+  const missingPrices = positions.some((position) => position.value == null);
+  const totalValue = missingPrices ? null : positions.reduce((sum, position) => sum + position.value, 0);
   const totalCost = positions.reduce((sum, position) => sum + position.cost, 0);
-  const totalUnrealized = totalValue - totalCost;
-  const totalReturn = totalCost ? (totalUnrealized / totalCost) * 100 : 0;
+  const totalUnrealized = totalValue == null ? null : totalValue - totalCost;
+  const totalReturn = totalUnrealized == null ? null : totalCost ? (totalUnrealized / totalCost) * 100 : 0;
   const realized = useMemo(() => {
     const holdings = new Map();
     return [...transactions].sort((a, b) => a.date.localeCompare(b.date)).reduce((total, transaction) => {
@@ -842,12 +844,12 @@ function PortfolioOverview({ theme, setTheme, assets, transactions, addTransacti
         <HeaderActions theme={theme} setTheme={setTheme} />
       </header>
 
-      <div className="demoNotice"><ShieldCheck size={15} /><span>Operazioni salvate esclusivamente in questo browser</span><b>{pricesUpdatedAt ? `Prezzi condivisi aggiornati alle ${formatUpdateTime(pricesUpdatedAt)}` : 'Nessuna API dedicata'}</b></div>
+      <div className="demoNotice"><ShieldCheck size={15} /><span>Operazioni salvate esclusivamente in questo browser</span><b>{pricesUpdatedAt ? `API verificata il ${formatUpdateTime(pricesUpdatedAt)}` : 'In attesa prezzi live'}</b></div>
 
       <section className="portfolioKpis">
         <article className="card portfolioKpi"><span>Valore indicativo</span><strong>{formatPortfolioNumber(totalValue)}</strong><small>Somma senza conversione valutaria</small></article>
         <article className="card portfolioKpi"><span>Capitale investito</span><strong>{formatPortfolioNumber(totalCost)}</strong><small>Costo residuo delle posizioni</small></article>
-        <article className={`card portfolioKpi ${totalUnrealized >= 0 ? 'positive' : 'negative'}`}><span>Risultato non realizzato</span><strong>{totalUnrealized >= 0 ? '+' : ''}{formatPortfolioNumber(totalUnrealized)}</strong><Change value={totalReturn} /></article>
+        <article className={`card portfolioKpi ${totalUnrealized == null ? '' : totalUnrealized >= 0 ? 'positive' : 'negative'}`}><span>Risultato non realizzato</span><strong>{totalUnrealized != null && totalUnrealized >= 0 ? '+' : ''}{formatPortfolioNumber(totalUnrealized)}</strong><Change value={totalReturn} /></article>
         <article className={`card portfolioKpi ${realized >= 0 ? 'positive' : 'negative'}`}><span>Risultato realizzato</span><strong>{realized >= 0 ? '+' : ''}{formatPortfolioNumber(realized)}</strong><small>Vendite registrate</small></article>
       </section>
 
@@ -877,7 +879,7 @@ function PortfolioOverview({ theme, setTheme, assets, transactions, addTransacti
         <article className="card allocationCard">
           <div><span className="overline">ALLOCAZIONE</span><h2>Peso delle posizioni</h2><p>Distribuzione basata sul valore corrente.</p></div>
           <div className="allocationList">
-            {positions.map((position) => <div className="allocationItem" key={position.symbol}><div><strong>{position.symbol}</strong><span>{totalValue ? formatPortfolioNumber((position.value / totalValue) * 100) : '0,00'}%</span></div><i><b style={{ width: `${totalValue ? (position.value / totalValue) * 100 : 0}%` }} /></i></div>)}
+            {positions.map((position) => <div className="allocationItem" key={position.symbol}><div><strong>{position.symbol}</strong><span>{totalValue == null ? 'N/D' : `${formatPortfolioNumber(totalValue ? (position.value / totalValue) * 100 : 0)}%`}</span></div><i><b style={{ width: `${totalValue && position.value != null ? (position.value / totalValue) * 100 : 0}%` }} /></i></div>)}
             {!positions.length && <div className="portfolioEmpty">Registra un acquisto per visualizzare l’allocazione.</div>}
           </div>
         </article>
@@ -1174,7 +1176,7 @@ function AnalysisOverview({ theme, setTheme, assets, favorites, transactions, ad
   return (
     <>
       <header><div><p className="eyebrow">Rischio e performance</p><h1>Analisi</h1><p className="subtitle">Serie storiche Yahoo scaricate solo su richiesta e conservate in cache per 6 ore.</p></div><HeaderActions theme={theme} setTheme={setTheme} /></header>
-      <div className="demoNotice"><ShieldCheck size={15} /><span>Nessuna chiamata API al caricamento della pagina</span><b>{updatedAt ? `Analisi aggiornata alle ${formatUpdateTime(updatedAt)}` : 'Premi Esegui analisi'}</b></div>
+      <div className="demoNotice"><ShieldCheck size={15} /><span>Nessuna chiamata API al caricamento della pagina</span><b>{updatedAt ? `Analisi eseguita il ${formatUpdateTime(updatedAt)}` : 'Premi Esegui analisi'}</b></div>
 
       <section className="card analysisControls">
         <div><span className="overline">CONFIGURAZIONE</span><h2>Seleziona gli strumenti</h2><p>Preferiti, posizioni in portafoglio e strumenti aggiunti via Yahoo Finance. Massimo 8 asset selezionati per singola analisi.</p></div>
@@ -1253,27 +1255,86 @@ function formatOverviewValue(value) {
   return value || 'N/D';
 }
 
-function MiniSparkline({ value = 0 }) {
+function MiniSparkline({ value }) {
+  if (!Number.isFinite(value)) return <span className="miniSparkUnavailable" aria-label="Andamento non disponibile">N/D</span>;
   const positive = value >= 0;
   return <span className={`miniSpark ${positive ? 'positive' : 'negative'}`}><i /><i /><i /><i /><i /><i /><i /></span>;
 }
 
 function OverviewChange({ value }) {
+  if (!Number.isFinite(value)) return <span className="overviewChange neutral">N/D</span>;
   const positive = value >= 0;
-  return <span className={`overviewChange ${positive ? 'positive' : 'negative'}`}>{positive ? '+' : ''}{Number(value || 0).toFixed(2)}%</span>;
+  return <span className={`overviewChange ${positive ? 'positive' : 'negative'}`}>{positive ? '+' : ''}{value.toFixed(2)}%</span>;
 }
 
 function normalizeOverviewAsset(asset) {
   return {
     ...asset,
     price: asset?.price || 'N/D',
-    daily: Number.isFinite(asset?.daily) ? asset.daily : 0,
-    monthly: Number.isFinite(asset?.monthly) ? asset.monthly : 0,
+    daily: Number.isFinite(asset?.daily) ? asset.daily : null,
+    monthly: Number.isFinite(asset?.monthly) ? asset.monthly : null,
   };
 }
 
 function normalizeOverviewGroup(group) {
   return String(group || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+}
+
+function overviewMoveLabel(value) {
+  if (!Number.isFinite(value)) return 'non disponibile';
+  if (value > 0.15) return 'in rialzo';
+  if (value < -0.15) return 'in ribasso';
+  return 'stabile';
+}
+
+function overviewStrengthLabel(value) {
+  if (!Number.isFinite(value)) return 'non disponibile';
+  if (value > 0.45) return 'forte';
+  if (value < -0.45) return 'debole';
+  return 'neutrale';
+}
+
+function buildCurrencyInsight(item) {
+  const daily = item.daily;
+  if (!Number.isFinite(daily) || !Number.isFinite(item.monthly)) return `${item.name}: dati insufficienti per l'analisi.`;
+  const trend = overviewMoveLabel(item.monthly);
+  const move = overviewMoveLabel(daily);
+
+  if (item.symbol === 'DXY') return `Dollaro ${overviewStrengthLabel(daily)}, ${move} oggi. Su base mensile il quadro e ${trend}.`;
+  if (item.symbol === 'EUR/USD') return daily >= 0 ? `Euro piu forte del dollaro, ${move}. Il cambio ha un trend mensile ${trend}.` : `Dollaro piu forte dell'euro, cambio ${move}. Il trend mensile resta ${trend}.`;
+  if (item.symbol === 'USD/JPY') return daily >= 0 ? `Yen debole contro dollaro: USD/JPY ${move}. Il trend mensile e ${trend}.` : `Yen in recupero contro dollaro: USD/JPY ${move}. Il trend mensile e ${trend}.`;
+  if (item.symbol === 'GBP/USD') return daily >= 0 ? `Sterlina forte contro dollaro, ${move}. Movimento mensile ${trend}.` : `Sterlina debole contro dollaro, ${move}. Movimento mensile ${trend}.`;
+  return `${item.name} ${overviewStrengthLabel(daily)}, ${move}. Trend mensile ${trend}.`;
+}
+
+function buildCommodityInsight(item) {
+  const daily = item.daily;
+  if (!Number.isFinite(daily) || !Number.isFinite(item.monthly)) return `${item.name}: dati insufficienti per l'analisi.`;
+  const trend = overviewMoveLabel(item.monthly);
+  const move = overviewMoveLabel(daily);
+
+  if (item.symbol === 'GOLD') return daily >= 0 ? `Oro forte, ${move}: maggiore domanda difensiva o tassi reali meno penalizzanti. Trend mensile ${trend}.` : `Oro debole, ${move}: minore domanda difensiva o tassi reali piu sfavorevoli. Trend mensile ${trend}.`;
+  if (item.symbol === 'COPPER') return daily >= 0 ? `Rame forte, ${move}: segnale ciclico positivo per industria e domanda globale. Trend mensile ${trend}.` : `Rame debole, ${move}: segnale piu prudente su industria e domanda globale. Trend mensile ${trend}.`;
+  if (item.symbol === 'BRENT' || item.symbol === 'WTI') return daily >= 0 ? `${item.name} ${move}: pressione energetica in aumento. Trend mensile ${trend}.` : `${item.name} ${move}: pressione energetica in calo. Trend mensile ${trend}.`;
+  return `${item.name} ${overviewStrengthLabel(daily)}, ${move}. Trend mensile ${trend}.`;
+}
+
+function buildOverviewInsight(group, rows) {
+  const isCurrency = normalizeOverviewGroup(group) === 'valute';
+  const validDaily = rows.map((item) => item.daily).filter(Number.isFinite);
+  const averageDaily = validDaily.length ? validDaily.reduce((total, value) => total + value, 0) / validDaily.length : null;
+  const main = [...rows].filter((item) => Number.isFinite(item.daily)).sort((a, b) => Math.abs(b.daily) - Math.abs(a.daily))[0];
+
+  return {
+    title: isCurrency ? 'Analisi valute' : 'Analisi materie prime',
+    summary: Number.isFinite(averageDaily)
+      ? `${group}: quadro complessivamente ${overviewStrengthLabel(averageDaily)}, movimento medio giornaliero ${averageDaily >= 0 ? '+' : ''}${averageDaily.toFixed(2)}%. Driver principale: ${main?.name || 'N/D'}.`
+      : `${group}: dati live non ancora disponibili. Attendere l'aggiornamento delle quotazioni.`,
+    lines: rows.map((item) => ({
+      ...item,
+      text: isCurrency ? buildCurrencyInsight(item) : buildCommodityInsight(item),
+    })),
+  };
 }
 
 function DynamicMarketTickerStrip({ assets }) {
@@ -1296,6 +1357,7 @@ function DynamicMarketTickerStrip({ assets }) {
 }
 
 function DynamicWorldMarketsOverview({ assets }) {
+  const [activeInsight, setActiveInsight] = useState(null);
   const groupOrder = ['Indici', 'Valute', 'Materie prime', 'Crypto', 'Volatilità', 'Obbligazioni', 'Credito e spread'];
   const groupedAssets = groupOrder
     .map((group) => ({
@@ -1311,9 +1373,13 @@ function DynamicWorldMarketsOverview({ assets }) {
       <div className="worldIndexGrid">
         {groupedAssets.map(({ group, rows }) => (
           <article className="worldIndexRegion" key={group}>
-            <h3>{group}</h3>
+            {['valute', 'materie prime'].includes(normalizeOverviewGroup(group)) ? (
+              <button className="worldIndexGroupButton" type="button" onClick={() => setActiveInsight(buildOverviewInsight(group, rows))}>{group}</button>
+            ) : (
+              <h3>{group}</h3>
+            )}
             <div className="worldIndexTable">
-              <div className="worldIndexHead"><span>Strumento</span><span /><span>Prezzo</span><span>Oggi</span></div>
+              <div className="worldIndexHead"><span>Strumento</span><span /><span>Prezzo</span><span>1 giorno</span></div>
               {rows.map((item) => (
                 <div className="worldIndexRow" key={`${group}-${item.symbol}`}>
                   <strong title={item.name}>{item.name}</strong>
@@ -1326,6 +1392,29 @@ function DynamicWorldMarketsOverview({ assets }) {
           </article>
         ))}
       </div>
+      {activeInsight && (
+        <div className="overviewModalBackdrop" role="presentation" onClick={() => setActiveInsight(null)}>
+          <section className="overviewModal" role="dialog" aria-modal="true" aria-label={activeInsight.title} onClick={(event) => event.stopPropagation()}>
+            <div className="overviewModalHead">
+              <div>
+                <span>Overview dinamica</span>
+                <h3>{activeInsight.title}</h3>
+              </div>
+              <button type="button" aria-label="Chiudi popup" onClick={() => setActiveInsight(null)}>x</button>
+            </div>
+            <p>{activeInsight.summary}</p>
+            <div className="overviewInsightList">
+              {activeInsight.lines.map((line) => (
+                <article key={line.symbol}>
+                  <div><strong>{line.name}</strong><span>{line.symbol} - {line.price}</span></div>
+                  <OverviewChange value={line.daily} />
+                  <p>{line.text}</p>
+                </article>
+              ))}
+            </div>
+          </section>
+        </div>
+      )}
     </section>
   );
 }
@@ -1375,13 +1464,17 @@ function DynamicOverviewSidebar({ assets, transactions }) {
   );
 }
 
-function MarketsOverviewPage({ assets, transactions }) {
+function MarketsOverviewPage({ assets, transactions, pricesUpdatedAt, pricesError }) {
+  const today = useTodayLabel();
+  const availableCount = assets.filter((item) => item.price !== 'N/D').length;
   return (
     <div className="marketsOverviewPage">
       <DynamicMarketTickerStrip assets={assets} />
       <div className="marketsOverviewLayout">
         <div className="marketsOverviewMain">
-          <h1>Markets Overview</h1>
+          <p className="overviewDate">{today}</p>
+          <h1>Panoramica mercati</h1>
+          <p className="overviewFreshness">{availableCount}/{assets.length} quotazioni disponibili · {pricesError || (pricesUpdatedAt ? `Verifica API: ${formatUpdateTime(pricesUpdatedAt)}` : 'Caricamento dati in corso')} · Le quotazioni possono riferirsi all'ultima seduta.</p>
           <DynamicWorldMarketsOverview assets={assets} />
           <section className="overviewHeatmapSection">
             <div className="overviewTitleRow">
@@ -1400,7 +1493,9 @@ function MarketsOverviewPage({ assets, transactions }) {
 function loadCustomAssets() {
   try {
     const saved = JSON.parse(localStorage.getItem('wealth-custom-assets') || '[]');
-    return Array.isArray(saved) ? saved : [];
+    return Array.isArray(saved)
+      ? saved.map((item) => ({ ...item, price: 'N/D', daily: null, monthly: null, source: null, asOf: null }))
+      : [];
   } catch {
     return [];
   }
@@ -1437,6 +1532,7 @@ function App() {
   const [assets, setAssets] = useState(() => [...markets, ...loadCustomAssets()]);
   const [transactions, setTransactions] = useState(loadPortfolioTransactions);
   const [pricesUpdatedAt, setPricesUpdatedAt] = useState(null);
+  const [pricesError, setPricesError] = useState('');
 
   useEffect(() => {
     let active = true;
@@ -1445,7 +1541,8 @@ function App() {
       try {
         const response = await fetch('/api/prices');
         const data = await response.json();
-        if (!active || !data.assets?.length) return;
+        if (!active) return;
+        if (!response.ok || !Array.isArray(data.assets)) throw new Error(data.error || 'Feed prezzi non disponibile');
         const liveBySymbol = new Map(data.assets.map((item) => [item.symbol, item]));
         const customAssets = loadCustomAssets();
         const customQuotes = await Promise.all(customAssets.map(async (item) => {
@@ -1463,27 +1560,30 @@ function App() {
           return live ? {
             ...item,
             price: formatLivePrice(live.price, item.currency),
-            daily: live.daily ?? item.daily,
-            monthly: live.monthly ?? item.monthly,
+            daily: live.daily ?? null,
+            monthly: live.monthly ?? null,
             currency: item.currency || live.currency || '',
             source: live.source,
-          } : item;
+            asOf: live.asOf || null,
+          } : { ...item, price: 'N/D', daily: null, monthly: null, source: null, asOf: null };
         }));
         const updatedCustomAssets = customAssets.map((item) => {
           const live = liveBySymbol.get(item.symbol);
           return live ? {
             ...item,
             price: formatLivePrice(live.price, item.currency || live.currency),
-            daily: live.daily ?? item.daily,
-            monthly: live.monthly ?? item.monthly,
+            daily: live.daily ?? null,
+            monthly: live.monthly ?? null,
             currency: item.currency || live.currency || '',
             source: live.source,
-          } : item;
+            asOf: live.asOf || null,
+          } : { ...item, price: 'N/D', daily: null, monthly: null, source: null, asOf: null };
         });
         localStorage.setItem('wealth-custom-assets', JSON.stringify(updatedCustomAssets));
         setPricesUpdatedAt(data.updatedAt);
+        setPricesError('');
       } catch {
-        // Static values remain available when the local API is offline.
+        if (active) setPricesError('Aggiornamento API non riuscito');
       }
     }
 
@@ -1524,6 +1624,7 @@ function App() {
       monthly: quote.monthly ?? 0,
       currency: quote.currency || '',
       source: quote.source,
+      asOf: quote.asOf || null,
       custom: true,
     };
     setAssets((current) => {
@@ -1591,82 +1692,16 @@ function App() {
 
       <main>
         {page !== 'markets' && <TradingViewTickerTape />}
-        {page === 'markets' ? <MarketsOverviewPage assets={assets} transactions={transactions} /> : page === 'macro' ? <MacroOverview theme={theme} setTheme={setTheme} assets={assets} /> : page === 'watchlist' ? (
-          <WatchlistOverview theme={theme} setTheme={setTheme} favorites={favorites} toggleFavorite={toggleFavorite} assets={assets} pricesUpdatedAt={pricesUpdatedAt} addAsset={addAsset} removeAsset={removeAsset} />
+        {page === 'markets' ? <MarketsOverviewPage assets={assets} transactions={transactions} pricesUpdatedAt={pricesUpdatedAt} pricesError={pricesError} /> : page === 'macro' ? <MacroOverview theme={theme} setTheme={setTheme} assets={assets} /> : page === 'watchlist' ? (
+          <WatchlistOverview theme={theme} setTheme={setTheme} favorites={favorites} toggleFavorite={toggleFavorite} assets={assets} pricesUpdatedAt={pricesUpdatedAt} pricesError={pricesError} addAsset={addAsset} removeAsset={removeAsset} />
         ) : page === 'news' ? (
           <NewsOverview theme={theme} setTheme={setTheme} />
         ) : page === 'portfolio' ? (
           <PortfolioOverview theme={theme} setTheme={setTheme} assets={assets} transactions={transactions} addTransaction={addTransaction} removeTransaction={removeTransaction} pricesUpdatedAt={pricesUpdatedAt} />
         ) : page === 'analysis' ? (
           <AnalysisOverview theme={theme} setTheme={setTheme} assets={assets} favorites={favorites} transactions={transactions} addAsset={addAsset} />
-        ) : (
-        <>
-        <header>
-          <div>
-            <p className="eyebrow">Giovedì, 11 giugno</p>
-            <h1>Panoramica mercati</h1>
-            <p className="subtitle">Ecco come si muovono i mercati oggi.</p>
-          </div>
-          <HeaderActions theme={theme} setTheme={setTheme} showSearch query={query} setQuery={setQuery} />
-        </header>
+        ) : null}
 
-        <div className="demoNotice"><Sparkles size={15} /><span>Preview con dati dimostrativi</span><b>Mercati aperti</b></div>
-
-        <section className="heroGrid">
-          <TradingViewMarketOverview theme={theme} />
-
-          <div className="statsColumn">
-            <article className="card statCard"><span className="statIcon blue"><Landmark size={19} /></span><div><span>Mercati globali</span><strong>Positivi</strong><small>7 indici su 10 in rialzo</small></div><Change value={0.34} /></article>
-            <article className="card statCard"><span className="statIcon green"><CircleDollarSign size={19} /></span><div><span>EUR / USD</span><strong>{eurUsd.price}</strong><small>{pricesUpdatedAt ? `Aggiornato alle ${formatUpdateTime(pricesUpdatedAt)}` : 'Valore iniziale'}</small></div><Change value={eurUsd.daily} /></article>
-            <article className="card statCard sentiment"><div className="sentimentTop"><span>Sentiment mercato</span><strong>Risk-on</strong></div><div className="sentimentBar"><i /></div><div className="sentimentLabels"><span>Prudenza</span><span>Ottimismo</span></div></article>
-          </div>
-        </section>
-
-        <section className="sectionHeading"><div><h2>Heatmap S&amp;P 500</h2><p>Performance dei titoli raggruppati per settore e capitalizzazione.</p></div></section>
-        <TradingViewStockHeatmap />
-
-        <section className="sectionHeading"><div><h2>La tua watchlist</h2><p>Prezzi e performance degli strumenti che segui.</p></div><button className="secondaryButton">Gestisci watchlist</button></section>
-        <div className="filterRow">
-          {['Tutti', 'Preferiti', 'Indici', 'Valute', 'Materie prime', 'Crypto'].map((item) => <button key={item} onClick={() => setFilter(item)} className={filter === item ? 'active' : ''}>{item}</button>)}
-        </div>
-
-        <section className="card tableCard">
-          <div className="marketTable">
-            <div className="tableRow tableHead"><span>Strumento</span><span>Prezzo corrente</span><span>Oggi</span><span>1 mese</span><span>Valuta</span><span /></div>
-            {visibleMarkets.map((item) => (
-              <div className="tableRow" key={item.symbol}>
-                <div className="instrument"><button onClick={() => toggleFavorite(item.symbol)} aria-label="Preferito"><Star size={16} fill={favorites.has(item.symbol) ? 'currentColor' : 'none'} /></button><span><strong>{item.name}</strong><small>{item.symbol} · {item.group}</small></span></div>
-                <strong>{item.price}</strong><Change value={item.daily} /><Change value={item.monthly} /><span className="currency">{item.currency || '—'}</span><button className="moreButton"><MoreHorizontal size={18} /></button>
-              </div>
-            ))}
-            {!visibleMarkets.length && <div className="empty">Nessuno strumento corrisponde alla ricerca.</div>}
-          </div>
-        </section>
-
-        <section className="sectionHeading macroHeading"><div><h2>Indicatori macro</h2><p>I principali riferimenti per leggere il mercato.</p></div><span className="updated">Aggiornati oggi, 09:42</span></section>
-        <section className="macroGrid">
-          {macro.map((item) => <article className="card macroCard" key={item.label}><span className={`macroDot ${item.tone}`} /><span>{item.label}</span><strong>{item.value}</strong><small>{item.note}</small></article>)}
-        </section>
-
-        <section className="sectionHeading commodityHeading"><div><h2>Materie prime e scenario macro</h2><p>Rame e petrolio aiutano a interpretare crescita e pressioni inflazionistiche.</p></div><span className="updated">Movimento a 1 mese</span></section>
-        <section className="commodityGrid">
-          {commodities.map((item) => (
-            <article className="card commodityCard" key={item.symbol}>
-              <div className={`commodityIcon ${item.tone}`}>{item.symbol === 'COPPER' ? 'Cu' : 'Br'}</div>
-              <div className="commodityName"><span>{item.name}</span><small>{item.unit}</small></div>
-              <strong>{item.price}</strong>
-              <div className="commodityChanges"><span>Oggi <Change value={item.daily} /></span><span>1 mese <Change value={item.monthly} /></span></div>
-            </article>
-          ))}
-          <article className="card commodityInsight">
-            <span className="overline">LETTURA DEL REGIME</span>
-            <strong>Rame forte, petrolio in calo</strong>
-            <p>{commodityComment(commodities[0], commodities[1])}</p>
-            <small>Indicazione orientativa, da integrare con crescita, inflazione e politica monetaria.</small>
-          </article>
-        </section>
-        </>
-        )}
       </main>
     </div>
   );

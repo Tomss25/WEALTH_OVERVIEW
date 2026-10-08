@@ -16,6 +16,7 @@ loadEnv();
 const app = express();
 const port = Number(process.env.PORT || 3001);
 const PRICE_CACHE_MS = 15 * 60 * 1000;
+const NEWS_CACHE_MS = 15 * 60 * 1000;
 const HISTORY_CACHE_MS = 6 * 60 * 60 * 1000;
 const ITALY_INFLATION_CACHE_MS = 60 * 60 * 1000;
 
@@ -38,9 +39,9 @@ const instruments = [
   { symbol: 'BTP10Y', yahoo: '^IT10Y' },
   { symbol: 'BTP2Y', yahoo: '^IT2Y' },
   { symbol: 'BUND10Y', yahoo: '^DE10Y' },
-  { symbol: 'UST10Y', yahoo: '^TNX', scale: 0.1 },
+  { symbol: 'UST10Y', yahoo: '^TNX' },
   { symbol: 'UST2Y', yahoo: '^UST2Y' },
-  { symbol: 'UST30Y', yahoo: '^TYX', scale: 0.1 },
+  { symbol: 'UST30Y', yahoo: '^TYX' },
   { symbol: 'BTP-BUND' },
   { symbol: 'USHY', yahoo: 'BAMLH0A0HYM2' },
   { symbol: 'EUHY' },
@@ -55,7 +56,7 @@ let priceCache = { updatedAt: null, expiresAt: 0, assets: [] };
 const customQuoteCache = new Map();
 const assetSearchCache = new Map();
 const historyCache = new Map();
-let newsCache = { updatedAt: null, articles: [] };
+let newsCache = { updatedAt: null, expiresAt: 0, articles: [] };
 let italyInflationCache = { expiresAt: 0, value: null };
 
 const round = (value) => Math.round(value * 100) / 100;
@@ -152,11 +153,11 @@ async function fetchText(url) {
 async function fetchItalyCurrentInflation() {
   const url = 'https://www.istat.it/en/tag/inflation/';
   const text = normalizeText(await fetchText(url));
-  const match = text.match(/In ([A-Za-z]+ \d{4}) the CPI \+([\d.,]+)% compared with the previous month and \+([\d.,]+)% year-over-year/i);
+  const match = text.match(/Consumer prices(?: \(provisional data\))?\s*(?:&#8211;|–|-)\s*([A-Za-z]+ \d{4})[\s\S]{0,300}?\bCPI\b[\s\S]{0,120}?\+([\d.,]+)%\s*(?:year-over-year|on annual basis)/i);
   if (!match) throw new Error('Dato ISTAT non trovato');
   return {
     label: 'Inflazione corrente',
-    value: parseDecimal(match[3]),
+    value: parseDecimal(match[2]),
     period: match[1],
     note: `CPI Italia, ${match[1]}`,
     source: 'ISTAT',
@@ -327,7 +328,14 @@ async function fetchYahoo(instrument) {
   const closes = chart?.indicators?.quote?.[0]?.close || [];
   const current = calculateChanges(closes);
   if (!Number.isFinite(current.price)) return null;
-  return { ...current, price: current.price * (instrument.scale || 1), currency: chart?.meta?.currency || '', source: 'Yahoo Finance' };
+  const lastQuoteTime = chart?.meta?.regularMarketTime || chart?.timestamp?.at(-1);
+  return {
+    ...current,
+    price: current.price,
+    currency: chart?.meta?.currency || '',
+    source: 'Yahoo Finance',
+    asOf: Number.isFinite(lastQuoteTime) ? new Date(lastQuoteTime * 1000).toISOString() : null,
+  };
 }
 
 async function fetchYahooHistory(symbol, years) {
@@ -363,7 +371,7 @@ async function fetchTwelve(instrument) {
   const json = await response.json();
   if (!Array.isArray(json.values)) return null;
   const current = calculateChanges(json.values.map((item) => Number(item.close)).reverse());
-  return Number.isFinite(current.price) ? { ...current, source: 'Twelve Data' } : null;
+  return Number.isFinite(current.price) ? { ...current, source: 'Twelve Data', asOf: json.values[0]?.datetime || null } : null;
 }
 
 async function fetchPrices() {
@@ -500,6 +508,7 @@ async function refreshNewsCache() {
   const rankedArticles = rankFinancialNews(json.articles);
   newsCache = {
     updatedAt: new Date().toISOString(),
+    expiresAt: Date.now() + NEWS_CACHE_MS,
     articles: rankedArticles.map((article) => ({
       title: article.title,
       summary: article.description,
@@ -514,7 +523,7 @@ async function refreshNewsCache() {
 
 app.get('/api/news', async (req, res) => {
   try {
-    const cacheIsCurrent = newsCache.updatedAt && dateKey(new Date(newsCache.updatedAt)) === dateKey(new Date());
+    const cacheIsCurrent = newsCache.expiresAt > Date.now();
     res.json(cacheIsCurrent ? newsCache : await refreshNewsCache());
   } catch (error) {
     res.status(502).json({ error: 'Impossibile aggiornare le news', details: error.message, ...newsCache });
