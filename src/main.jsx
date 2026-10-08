@@ -45,16 +45,16 @@ const markets = [
   { symbol: 'MSCIWORLD', name: 'MSCI World ETF', group: 'Indici', price: 'N/D', daily: null, monthly: null, currency: 'USD', favorite: false },
   { symbol: 'EUR/USD', name: 'Euro / Dollaro', group: 'Valute', price: 'N/D', daily: null, monthly: null, currency: '', favorite: true },
   { symbol: 'USD/JPY', name: 'Dollaro / Yen', group: 'Valute', price: 'N/D', daily: null, monthly: null, currency: '', favorite: false },
-  { symbol: 'GOLD', name: 'Oro Spot', group: 'Materie prime', price: 'N/D', daily: null, monthly: null, currency: 'USD', favorite: true },
-  { symbol: 'COPPER', name: 'Rame', group: 'Materie prime', price: 'N/D', daily: null, monthly: null, currency: 'USD', favorite: false },
-  { symbol: 'BRENT', name: 'Petrolio Brent', group: 'Materie prime', price: 'N/D', daily: null, monthly: null, currency: 'USD', favorite: false },
+  { symbol: 'GOLD', name: 'Future oro', group: 'Materie prime', price: 'N/D', daily: null, monthly: null, currency: 'USD', favorite: true },
+  { symbol: 'COPPER', name: 'Future rame', group: 'Materie prime', price: 'N/D', daily: null, monthly: null, currency: 'USD', favorite: false },
+  { symbol: 'BRENT', name: 'Future petrolio Brent', group: 'Materie prime', price: 'N/D', daily: null, monthly: null, currency: 'USD', favorite: false },
   { symbol: 'BTC', name: 'Bitcoin', group: 'Crypto', price: 'N/D', daily: null, monthly: null, currency: 'USD', favorite: false },
   { symbol: 'VIX', name: 'Indice di volatilita VIX', group: 'Volatilita', price: 'N/D', daily: null, monthly: null, currency: '', favorite: false },
   { symbol: 'VVIX', name: 'Volatilita del VIX', group: 'Volatilita', price: 'N/D', daily: null, monthly: null, currency: '', favorite: false },
   { symbol: 'VSTOXX', name: 'Euro Stoxx 50 Volatility', group: 'Volatilita', price: 'N/D', daily: null, monthly: null, currency: '', favorite: false },
   { symbol: 'MOVE', name: 'MOVE Bond Volatility', group: 'Volatilita', price: 'N/D', daily: null, monthly: null, currency: '', favorite: false },
   { symbol: 'BTP10Y', name: 'Titolo di Stato Italia 10 anni', group: 'Obbligazioni', price: 'N/D', daily: null, monthly: null, currency: '%', favorite: false },
-  { symbol: 'BTP2Y', name: 'BTP Italia 2 anni', group: 'Obbligazioni', price: 'N/D', daily: null, monthly: null, currency: '%', favorite: false },
+  { symbol: 'BTP2Y', name: 'Titolo di Stato Italia 2 anni', group: 'Obbligazioni', price: 'N/D', daily: null, monthly: null, currency: '%', favorite: false },
   { symbol: 'BUND10Y', name: 'Bund Germania 10 anni', group: 'Obbligazioni', price: 'N/D', daily: null, monthly: null, currency: '%', favorite: false },
   { symbol: 'UST10Y', name: 'Treasury USA 10 anni', group: 'Obbligazioni', price: 'N/D', daily: null, monthly: null, currency: '%', favorite: false },
   { symbol: 'UST2Y', name: 'Treasury USA 2 anni', group: 'Obbligazioni', price: 'N/D', daily: null, monthly: null, currency: '%', favorite: false },
@@ -64,8 +64,8 @@ const markets = [
   { symbol: 'EUHY', name: 'Spread High Yield Europa', group: 'Credito e spread', price: 'N/D', daily: null, monthly: null, currency: 'pb', favorite: false },
   { symbol: 'DXY', name: 'Dollar Index', group: 'Valute', price: 'N/D', daily: null, monthly: null, currency: '', favorite: false },
   { symbol: 'GBP/USD', name: 'Sterlina / Dollaro', group: 'Valute', price: 'N/D', daily: null, monthly: null, currency: '$', favorite: false },
-  { symbol: 'SILVER', name: 'Argento Spot', group: 'Materie prime', price: 'N/D', daily: null, monthly: null, currency: 'USD', favorite: false },
-  { symbol: 'WTI', name: 'Petrolio WTI', group: 'Materie prime', price: 'N/D', daily: null, monthly: null, currency: 'USD', favorite: false },
+  { symbol: 'SILVER', name: 'Future argento', group: 'Materie prime', price: 'N/D', daily: null, monthly: null, currency: 'USD', favorite: false },
+  { symbol: 'WTI', name: 'Future petrolio WTI', group: 'Materie prime', price: 'N/D', daily: null, monthly: null, currency: 'USD', favorite: false },
   { symbol: 'ETH', name: 'Ethereum', group: 'Crypto', price: 'N/D', daily: null, monthly: null, currency: 'USD', favorite: false },
 ];
 
@@ -685,7 +685,7 @@ function NewsOverview({ theme, setTheme }) {
         if (data.articles?.length) {
           setNews(data.articles.map((article, index) => ({
             ...article,
-            category: index === 0 ? 'Notizia finanziaria del giorno' : 'Economia e mercati',
+            category: index === 0 ? 'Notizia principale' : 'Economia e mercati',
             time: formatUpdateTime(article.publishedAt),
             tone: index === 0 ? 'blue' : ['green', 'orange', 'violet', 'cyan', 'red'][index % 5],
           })));
@@ -707,7 +707,7 @@ function NewsOverview({ theme, setTheme }) {
       if (!data.articles?.length) throw new Error('Nessuna news live disponibile.');
       setNews(data.articles.map((article, index) => ({
         ...article,
-        category: index === 0 ? 'Notizia finanziaria del giorno' : 'Economia e mercati',
+        category: index === 0 ? 'Notizia principale' : 'Economia e mercati',
         time: formatUpdateTime(article.publishedAt),
         tone: index === 0 ? 'blue' : ['green', 'orange', 'violet', 'cyan', 'red'][index % 5],
       })));
