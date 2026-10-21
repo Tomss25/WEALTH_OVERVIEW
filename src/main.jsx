@@ -1434,6 +1434,14 @@ function DynamicOverviewSidebar({ assets, transactions }) {
   return (
     <aside className="overviewSidePanel">
       <label className="overviewLookup"><Search size={17} /><input placeholder="Quote Lookup" /></label>
+      <section className="fearGreedCard" aria-labelledby="fear-greed-title">
+        <span className="fearGreedSource">CNN · Mercato azionario USA</span>
+        <h3 id="fear-greed-title">Fear &amp; Greed Index</h3>
+        <p>Consulta il sentiment aggiornato sulla pagina ufficiale di CNN.</p>
+        <a href="https://www.cnn.com/markets/fear-and-greed" target="_blank" rel="noopener noreferrer">
+          Apri l’indice su CNN <ExternalLink size={15} aria-hidden="true" />
+        </a>
+      </section>
       <section>
         <h3>Movimenti principali</h3>
         <div className="overviewList">
